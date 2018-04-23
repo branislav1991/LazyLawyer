@@ -25,7 +25,7 @@ class CURIACrawler(Crawler):
     def __init__(self):
         super().__init__()
 
-    def ecj_cases_to_json(self, json_path):
+    def crawl_ecj_cases(self, json_path):
         """Crawl ECJ cases and save descriptions and links to a json file.
         """
         html = self.crawl(self.eu_case_law_url)
@@ -41,9 +41,6 @@ class CURIACrawler(Crawler):
             except (AttributeError, TypeError):
                 return None
         self.cases_dict = [parse_case(r) for r in case_rows if parse_case(r) is not None]
-            
-        with open(json_path, 'w', encoding='UTF-8') as jsonfile:
-            json.dump(cases_dict, jsonfile)
 
     def load_ecj_cases_json(self, json_path):
         """If a json file with urls of ecj cases already exists,
@@ -101,10 +98,3 @@ class CURIACrawler(Crawler):
         selected_cases_dict = self.cases_dict[skip_cases:skip_cases+n_cases]
         files_dict = [self._get_doc(x) for x in selected_cases_dict if self._get_doc(x) is not None]
         print(len(files_dict))
-
-if __name__ == '__main__':
-    path_cases_json = 'data/cases_list.json'
-    crawler = CURIACrawler() 
-    #crawler.ecj_cases_to_csv(path_cases_json)
-    crawler.load_ecj_cases_json(path_cases_json)
-    crawler.download_cases_docs(n_cases=10, skip_cases=4000)
