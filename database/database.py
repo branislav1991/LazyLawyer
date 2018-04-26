@@ -35,6 +35,14 @@ class CURIACaseDatabase(CaseDatabase):
     def __init__(self):
         super().__init__()
 
+    def _convert_to_cases_dict(self, db_rows):
+        cases = [{'id': x[0], 'name': x[1], 'desc': x[2], 'url': x[3]} for x in db_rows]
+        return cases
+    
+    def _convert_to_docs_dict(self, db_rows):
+        docs = [{'id': x[0], 'case_id': x[1], 'name': x[2], 'ecli': x[3], 'date': x[4],
+                'parties': x[5], 'subject': x[6], 'link_curia': x[7], 'link_eurlex': x[8]}]
+
     def create_tables(self, remove_old=False):
         if remove_old:
             self.cursor.execute("""DROP TABLE IF EXISTS cases""")
@@ -81,3 +89,32 @@ class CURIACaseDatabase(CaseDatabase):
         for doc in docs:
             doc['case_id'] = row[0]
         self._batch_insert('docs', docs)
+
+    def get_all_cases(self):
+        """Retrieves all cases from the database.
+        This can be useful e.g. when we want to
+        bulk download or crawl.
+        """
+        s = """SELECT * FROM cases"""
+        result = self.cursor.execute(s)
+        rows = result.fetchall()
+        return self._convert_to_cases_dict(rows)
+
+    def get_max_case_id_in_docs(self):
+        """Retrieves the highest case_id present in the
+        docs table. This is to allow for appending the docs
+        table with new cases.
+        """
+        s = """SELECT MAX(case_id) FROM docs"""
+        result = self.cursor.execute(s)
+        row = result.fetchone()
+        return row[0]
+
+    def get_docs_for_case(self, case):
+        """Retrieves documents for a specific case.
+        """
+        
+        s = """SELECT * FROM docs WHERE case_id=?"""
+        result = self.cursor.execute(s, (case['id']))
+        rows = result.fetchall()
+        return self._convert_to_docs_dict(rows)
