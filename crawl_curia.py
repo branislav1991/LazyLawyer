@@ -4,6 +4,7 @@ and relevant pdf document links for each case to the database.
 
 from crawlers.crawlers import CURIACrawler
 from database.database import CURIACaseDatabase
+from tqdm import tqdm
 
 crawl_docs_only = True
 
@@ -22,20 +23,10 @@ try:
         cases = crawler.crawl_ecj_cases()
         db.write_cases(cases)
 
-    for case in cases:
+    for case in tqdm(cases):
         docs = crawler.crawl_case_docs(case)
         if docs is not None:
             db.write_docs(case, docs)
 
 finally:
     db.close()
-
-# from tqdm import tqdm
-# import requests
-
-# url = "http://download.thinkbroadband.com/10MB.zip"
-# response = requests.get(url, stream=True)
-
-# with open("10MB", "wb") as handle:
-#     for data in tqdm(response.iter_content()):
-#         handle.write(data)
