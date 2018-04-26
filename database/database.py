@@ -41,7 +41,8 @@ class CURIACaseDatabase(CaseDatabase):
     
     def _convert_to_docs_dict(self, db_rows):
         docs = [{'id': x[0], 'case_id': x[1], 'name': x[2], 'ecli': x[3], 'date': x[4],
-                'parties': x[5], 'subject': x[6], 'link_curia': x[7], 'link_eurlex': x[8]}]
+                'parties': x[5], 'subject': x[6], 'link_curia': x[7],
+                'link_eurlex': x[8], 'type': x[9]}]
 
     def create_tables(self, remove_old=False):
         if remove_old:
@@ -64,6 +65,7 @@ class CURIACaseDatabase(CaseDatabase):
             subject TEXT,
             link_curia TEXT,
             link_eurlex TEXT,
+            type TEXT,
             FOREIGN KEY (case_id) REFERENCES cases(id) 
             )""")
 

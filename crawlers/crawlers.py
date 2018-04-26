@@ -96,9 +96,11 @@ class CURIACrawler(Crawler):
                     .find_all('img', {'title': 'View pdf documents'})
                 link_eurlex = link_to_image(links_eurlex)
 
+                type = 'pdf'
+
                 return {'name': name, 'ecli': ecli, 'date': date, 
                     'parties': parties, 'subject': subject, 'link_curia': link_curia,
-                    'link_eurlex': link_eurlex}
+                    'link_eurlex': link_eurlex, 'type': type}
 
             all_docs = [get_doc_desc(x) for x in all_docs_html]
             return all_docs
