@@ -6,7 +6,7 @@ include rendering of HTML files and others.
 import os
 import subprocess
 
-def _run_pdfrenderer(args):
+def _run_pdfrenderer(args, cwd):
     """Calls the renderer with the appropriate
     arguments.
     Input params:
@@ -18,18 +18,19 @@ def _run_pdfrenderer(args):
         app = 'gswin64c'
 
     subprocess.run([app] + args,
-        env={'PATH': os.getenv('PATH'), 'TEMP': os.getenv('TEMP')})
+        env={'PATH': os.getenv('PATH'), 'TEMP': os.getenv('TEMP')}, cwd=cwd)
 
 
-def render_pdf(filepath, outputfilepath, format, resolution):
+def render_pdf(filepath, outputfilename, format, resolution):
     """Render pdf file to a specific format.
     Input params:
     filepath: PDF document to render.
-    outputfilepath: Where to save the output.
+    outputfilename: Name of the output file. The output
+    will be saved in the same directory as the input file.
     format: 'png' or 'tiff'.
     resolution: Resolution in DPI.
     """
-    outputfilestr = '-o ' + outputfilepath
+    outputfilestr = '-o ' + outputfilename
     resolutionstr = '-r' + str(resolution)
     if format == 'png':
         sdevicestr = '-sDEVICE=png16m'
@@ -38,8 +39,9 @@ def render_pdf(filepath, outputfilepath, format, resolution):
         sdevicestr = '-sDEVICE=tiff24nc'
         compression = '-sCompression=lzw'
 
-    args = ['-q',resolutionstr,sdevicestr,compression,outputfilestr,filepath,'-c','quit']
-    _run_pdfrenderer(args)
+    cwd, filename = os.path.split(filepath)
+    args = ['-q',resolutionstr,sdevicestr,compression,outputfilestr,filename,'-c','quit']
+    _run_pdfrenderer(args, cwd=cwd)
 
 if __name__ == '__main__':
-    render_pdf('documents/hello.pdf', 'a.tiff', 'tiff', 300)
+    render_pdf('documents/hello.pdf', 'hello.tiff', 'tiff', 300)
