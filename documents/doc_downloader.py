@@ -5,8 +5,11 @@ import requests
 
 def _download_file(url, filename):
     response = requests.get(url)
-    with open(filename, 'wb') as file:
-        file.write(response.content)
+    if response.status_code == requests.codes.ok:
+        with open(filename, 'wb') as file:
+            file.write(response.content)
+    else:
+        response.raise_for_status()
 
 def download_docs_for_case(case, docs):
     """Downloads documents from the web belonging to a
