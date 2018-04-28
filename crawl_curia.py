@@ -7,6 +7,8 @@ from database.database import CURIACaseDatabase
 from tqdm import tqdm
 
 crawl_docs_only = True
+crawl_pdf = False
+crawl_html = True
 
 crawler = CURIACrawler() 
 
@@ -18,13 +20,11 @@ try:
         cases = [x for x in cases if x['id'] > max_case_id]
 
     else:
-        db.create_tables(remove_old=True)
-
         cases = crawler.crawl_ecj_cases()
         db.write_cases(cases)
 
     for case in tqdm(cases):
-        docs = crawler.crawl_case_docs(case)
+        docs = crawler.crawl_case_docs(case, crawl_pdf, crawl_html)
         if docs is not None:
             db.write_docs(case, docs)
 
