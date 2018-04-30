@@ -1,6 +1,6 @@
 """Performs migration of the database.
 """
-from database.database import CURIACaseDatabase
+from database import CURIACaseDatabase
 
 db = CURIACaseDatabase()
 db.create_tables(remove_old=True)
