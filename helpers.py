@@ -1,5 +1,14 @@
 import os
 
+def import_by_name(name):
+    """Imports a python module by its
+    qualified name.
+    """
+    module = __import__(name)
+    for n in name.split(".")[1:]:
+        module = getattr(module, n)
+    return module
+
 def strip_js_window_open(js):
     """Strips the javascript window.open function from 
     a link.

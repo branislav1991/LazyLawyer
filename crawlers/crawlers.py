@@ -1,4 +1,5 @@
 from bs4 import BeautifulSoup
+import crawlers.curia_cl_protocol
 import helpers
 import json
 import re
@@ -8,11 +9,7 @@ class Crawler:
     SETUP_FILE_PATH = 'crawlers/crawler_setup.json'
 
     def __init__(self):
-        """Intialize the crawler with the setup file.
-        """
-        with open(Crawler.SETUP_FILE_PATH, 'r') as setup_file:
-            setup_json = json.load(setup_file) 
-            self.eu_case_law_url = setup_json['eu_case_law_url']
+        pass
 
     def _crawl(self, url):
         """Crawl a specific url and return the soup.
@@ -24,27 +21,23 @@ class Crawler:
 
 class CURIACrawler(Crawler):
     def __init__(self):
-        super().__init__()
+        with open(Crawler.SETUP_FILE_PATH, 'r') as setup_file:
+            setup_json = json.load(setup_file) 
+            self.eu_case_law_links = setup_json['eu_case_law_links']
 
     def crawl_ecj_cases(self):
         """Crawl ECJ cases and save descriptions and links to a json file.
         """
-        html = self._crawl(self.eu_case_law_url)
-
-        case_rows = html.body.find_all('tr')
-        def parse_case(row):
-            try:
-                link = row.find('b').a
-                url = helpers.strip_js_window_open(link['href'])
-                name = link.text.strip()
-                desc = row.find('i').text.strip()
-                return {'url': url, 'name': name, 'desc': desc}
-            except (AttributeError, TypeError):
-                return None
-        cases_dict = [parse_case(r) for r in case_rows if parse_case(r) is not None]
+        cases_dict = []
+        for link in self.eu_case_law_links:
+            html = self._crawl(link['url'])
+            protocol = helpers.import_by_name(link['protocol'])
+            result = protocol.crawl_cases(html)
+            cases_dict.extend(result)
+        
         return cases_dict
 
-    def crawl_case_docs(self, case):
+    def crawl_case_docs(self, case, pdf, html):
         """Crawl individual cases from the case directory.
         Requires the case dictionary to be already loaded either
         by calling ecj_cases_to_json() or load_ecj_cases_json().
@@ -88,14 +81,15 @@ class CURIACrawler(Crawler):
                         link = None
                     return link
 
-                links_curia = html_tr.find('td', {'class': 'table_cell_links_eurlex'}) \
-                    .find_all('img', {'title': 'View pdf documents'})
-                link_curia = link_to_image(links_curia)
+                if pdf:
+                    links_curia = html_tr.find('td', {'class': 'table_cell_links_eurlex'}) \
+                        .find_all('img', {'title': 'View pdf documents'})
+                    link_curia = link_to_image(links_curia)
 
-                links_eurlex = html_tr.find_all('td', {'class': 'table_cell_aff'})[1] \
-                    .find_all('img', {'title': 'View pdf documents'})
-                link_eurlex = link_to_image(links_eurlex)
-
+                    links_eurlex = html_tr.find_all('td', {'class': 'table_cell_aff'})[1] \
+                        .find_all('img', {'title': 'View pdf documents'})
+                    link_eurlex = link_to_image(links_eurlex)
+                
                 type = 'pdf'
 
                 return {'name': name, 'ecli': ecli, 'date': date, 

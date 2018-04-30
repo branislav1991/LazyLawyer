@@ -6,9 +6,9 @@ from crawlers.crawlers import CURIACrawler
 from database.database import CURIACaseDatabase
 from tqdm import tqdm
 
-crawl_docs_only = True
-crawl_pdf = False
-crawl_html = True
+crawl_docs_only = False
+crawl_pdf = True
+crawl_html = False
 
 crawler = CURIACrawler() 
 

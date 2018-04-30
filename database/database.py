@@ -15,21 +15,55 @@ class CaseDatabase:
     def close(self):
         self.connection.close()
 
-    def _batch_insert(self, table, vals, batch_size=100):
+    def _batch_check_existing(self, batch, table, attr):
+        """For a batch of values, check if those
+        values already exist in the table based on 
+        a specific attribute.
+        """
+        batchvals = [x[attr] for x in batch]
+
+        s = 'SELECT '
+        s += attr
+        s += ' FROM '
+        s += table
+        s += ' WHERE '
+        s += attr
+        s += ' IN ('
+        s += ','.join('"{0}"'.format(b) for b in batchvals)
+        s += ')'
+        result = self.cursor.execute(s)
+        rows = result.fetchall()
+
+        batchnames = [x[0] for x in rows]
+        batch = [x for x in batch if x['name'] not in batchnames]
+        return batch
+
+    def _insert_batch(self, batch, table):
+        """Insert one batch of data into a table.
+        """
+        cols = batch[0].keys()
+        batchvals = [tuple(x.values()) for x in batch]
+        placeholder = '?'
+        placeholderlist = ",".join([placeholder] * len(cols))
+
+        s = 'INSERT INTO '
+        s += table
+        s += '(' + ','.join(cols) + ')'
+        s += ' VALUES'
+        s += '(' + placeholderlist + ')'
+        self.cursor.executemany(s, batchvals)
+        self.connection.commit()
+
+    def batch_insert(self, table, vals, batch_size=100):
+        """Process vals in batches of a specific batch size
+        and insert them into a table. Also perform a check to
+        verify if data is already in the database.
+        """
         batches = list(helpers.create_batches(vals, batch_size))
         for batch in batches:
-            cols = batch[0].keys()
-            batchvals = [tuple(x.values()) for x in batch]
-            placeholder = '?'
-            placeholderlist = ",".join([placeholder] * len(cols))
-
-            s = 'INSERT INTO '
-            s += table
-            s += '(' + ','.join(cols) + ')'
-            s += ' VALUES'
-            s += '(' + placeholderlist + ')'
-            self.cursor.executemany(s, batchvals)
-            self.connection.commit()
+            batch = self._batch_check_existing(batch, table, attr='name')
+            if len(batch) > 0:
+                self._insert_batch(batch, table)
 
 class CURIACaseDatabase(CaseDatabase):
     def __init__(self):
@@ -77,7 +111,7 @@ class CURIACaseDatabase(CaseDatabase):
         Input params:
         cases: case dictionary with all relevant information.
         """
-        self._batch_insert('cases', cases)
+        self.batch_insert('cases', cases)
     
     def write_docs(self, case, docs):
         """Stores documents belonging to a case.
@@ -91,7 +125,7 @@ class CURIACaseDatabase(CaseDatabase):
 
         for doc in docs:
             doc['case_id'] = row[0]
-        self._batch_insert('docs', docs)
+        self.batch_insert('docs', docs)
 
     def get_all_cases(self):
         """Retrieves all cases from the database.
