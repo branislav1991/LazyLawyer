@@ -15,22 +15,25 @@ class CaseDatabase:
     def close(self):
         self.connection.close()
 
-    def _batch_check_existing(self, batch, table, attr):
+    def _batch_check_existing(self, batch, table, attrs):
         """For a batch of values, check if those
         values already exist in the table based on 
         a specific attribute.
         """
-        batchvals = [x[attr] for x in batch]
+        conditions = []
+        for attr in attrs:
+            batchvals = [x[attr] for x in batch]
+            cond = attr + ' IN ('
+            cond +=  ','.join('"{0}"'.format(b) for b in batchvals)
+            cond += ')'
+            conditions.append(cond)
 
         s = 'SELECT '
         s += attr
         s += ' FROM '
         s += table
         s += ' WHERE '
-        s += attr
-        s += ' IN ('
-        s += ','.join('"{0}"'.format(b) for b in batchvals)
-        s += ')'
+        s += ' AND '.join(conditions)
         result = self.cursor.execute(s)
         rows = result.fetchall()
 
@@ -54,14 +57,15 @@ class CaseDatabase:
         self.cursor.executemany(s, batchvals)
         self.connection.commit()
 
-    def batch_insert(self, table, vals, batch_size=100):
+    def batch_insert_check(self, table, vals, attrs, batch_size=100):
         """Process vals in batches of a specific batch size
         and insert them into a table. Also perform a check to
-        verify if data is already in the database.
+        verify if data is already in the database based on the attributes
+        (columns) defined in attrs.
         """
         batches = list(helpers.create_batches(vals, batch_size))
         for batch in batches:
-            batch = self._batch_check_existing(batch, table, attr='name')
+            batch = self._batch_check_existing(batch, table, attrs)
             if len(batch) > 0:
                 self._insert_batch(batch, table)
 
@@ -70,13 +74,14 @@ class CURIACaseDatabase(CaseDatabase):
         super().__init__()
 
     def _convert_to_cases_dict(self, db_rows):
-        cases = [{'id': x[0], 'name': x[1], 'desc': x[2], 'url': x[3]} for x in db_rows]
+        cases = [{'id': x[0], 'name': x[1], 'desc': x[2],
+            'url': x[3], 'protocol': x[4]} for x in db_rows]
         return cases
     
     def _convert_to_docs_dict(self, db_rows):
         docs = [{'id': x[0], 'case_id': x[1], 'name': x[2], 'ecli': x[3], 'date': x[4],
-                'parties': x[5], 'subject': x[6], 'link_curia': x[7],
-                'link_eurlex': x[8], 'type': x[9]} for x in db_rows]
+                'parties': x[5], 'subject': x[6], 'link': x[7],
+                'source': x[8], 'format': x[9]} for x in db_rows]
         return docs
 
     def create_tables(self, remove_old=False):
@@ -88,7 +93,8 @@ class CURIACaseDatabase(CaseDatabase):
             id INTEGER PRIMARY KEY,
             name TEXT NOT NULL,
             desc TEXT NOT NULL, 
-            url TEXT NOT NULL 
+            url TEXT NOT NULL,
+            protocol TEXT NOT NULL 
             )""") 
         self.cursor.execute("""CREATE TABLE IF NOT EXISTS docs(
             id INTEGER PRIMARY KEY,
@@ -98,9 +104,9 @@ class CURIACaseDatabase(CaseDatabase):
             date TEXT, 
             parties TEXT,
             subject TEXT,
-            link_curia TEXT,
-            link_eurlex TEXT,
-            type TEXT,
+            link TEXT,
+            source TEXT,
+            format TEXT,
             FOREIGN KEY (case_id) REFERENCES cases(id) 
             )""")
 
@@ -111,7 +117,7 @@ class CURIACaseDatabase(CaseDatabase):
         Input params:
         cases: case dictionary with all relevant information.
         """
-        self.batch_insert('cases', cases)
+        self.batch_insert_check('cases', cases, attrs=['name'])
     
     def write_docs(self, case, docs):
         """Stores documents belonging to a case.
@@ -125,7 +131,7 @@ class CURIACaseDatabase(CaseDatabase):
 
         for doc in docs:
             doc['case_id'] = row[0]
-        self.batch_insert('docs', docs)
+        self.batch_insert_check('docs', docs, attrs=['case_id', 'name'])
 
     def get_all_cases(self):
         """Retrieves all cases from the database.
@@ -145,7 +151,7 @@ class CURIACaseDatabase(CaseDatabase):
         s = """SELECT MAX(case_id) FROM docs"""
         result = self.cursor.execute(s)
         row = result.fetchone()
-        return row[0]
+        return -1 if row[0] is None else row[0]
 
     def get_docs_for_case(self, case):
         """Retrieves documents for a specific case.
