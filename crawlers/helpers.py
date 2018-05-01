@@ -9,6 +9,14 @@ def crawl(url):
     soup = BeautifulSoup(req.text, 'html.parser')
     return soup
 
+def download_file(url, filename):
+    response = requests.get(url)
+    if response.status_code == requests.codes.ok:
+        with open(filename, 'wb') as file:
+            file.write(response.content)
+    else:
+        response.raise_for_status()
+
 def strip_js_window_open(js):
     """Strips the javascript window.open function from 
     a link.

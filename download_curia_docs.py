@@ -12,6 +12,7 @@ bad_cases_filepath = 'documents/bad_cases.txt'
 
 for case in tqdm(cases):
     docs = db.get_docs_for_case(case)
+    docs = [d for d in docs if d['link'] is not None] # filter out docs without a link
     if len(docs) > 0:
         try:
             doc_downloader.download_docs_for_case(case, docs)

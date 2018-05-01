@@ -1,3 +1,4 @@
+from contextlib import suppress
 import helpers
 import crawlers.helpers
 import itertools
@@ -45,7 +46,12 @@ def _crawl_doc(html_tr, formats):
             if (fs[1] == 'curia'):
                 links_curia = html_tr.find('td', {'class': 'table_cell_links_eurlex'}) \
                     .find_all('img', {'title': 'View html documents'})
-                link = _link_to_image(links_curia)
+                doc_url = _link_to_image(links_curia)
+                if doc_url is not None: # if a document exists
+                    with suppress(Exception): # if we fail, we might as well search further
+                        html_doc = crawlers.helpers.crawl(doc_url)
+                        link = html_doc.find('a', {'id': 'mainForm:j_id159'})['href']
+
             elif (fs[1] == 'eurlex'):
                 links_eurlex = html_tr.find_all('td', {'class': 'table_cell_aff'})[1] \
                     .find_all('img', {'title': 'View html documents'})

@@ -1,4 +1,5 @@
 import os
+import requests
 
 def import_by_name(name):
     """Imports a python module by its
@@ -8,6 +9,14 @@ def import_by_name(name):
     for n in name.split(".")[1:]:
         module = getattr(module, n)
     return module
+
+def download_file(url, filename):
+    response = requests.get(url)
+    if response.status_code == requests.codes.ok:
+        with open(filename, 'wb') as file:
+            file.write(response.content)
+    else:
+        response.raise_for_status()
 
 def create_batches(list, batch_size):
     # For item i in a range that is a length of l,
