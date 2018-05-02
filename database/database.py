@@ -153,11 +153,18 @@ class CURIACaseDatabase(CaseDatabase):
         row = result.fetchone()
         return -1 if row[0] is None else row[0]
 
-    def get_docs_for_case(self, case):
+    def get_docs_for_case(self, case, only_valid=True):
         """Retrieves documents for a specific case.
+        Input params:
+        case: case to get docs for.
+        only_valid: only retrieve docs which contain a link.
         """
-        
-        s = """SELECT * FROM docs WHERE case_id=?"""
+
+        if only_valid:
+            s = """SELECT * FROM docs WHERE case_id=? AND link IS NOT NULL"""
+        else:
+            s = """SELECT * FROM docs WHERE case_id=?"""
+
         result = self.cursor.execute(s, (case['id'],))
         rows = result.fetchall()
         return self._convert_to_docs_dict(rows)

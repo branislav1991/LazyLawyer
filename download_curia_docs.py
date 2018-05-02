@@ -11,8 +11,7 @@ bad_cases = [] # docs that could not be downloaded properly
 bad_cases_filepath = 'documents/bad_cases.txt'
 
 for case in tqdm(cases):
-    docs = db.get_docs_for_case(case)
-    docs = [d for d in docs if d['link'] is not None] # filter out docs without a link
+    docs = db.get_docs_for_case(case, only_valid=True)
     if len(docs) > 0:
         try:
             doc_downloader.download_docs_for_case(case, docs)
