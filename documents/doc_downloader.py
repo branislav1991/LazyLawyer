@@ -9,7 +9,11 @@ def download_docs_for_case(case, docs):
     under [name].[format].
     """
     folder_path = Path('documents/' + helpers.case_name_to_folder(case['name']))
-    helpers.create_folder_if_not_exists(folder_path)
+    if os.path.exists(folder_path):
+        # we assume that the documents already exists; skip
+        return
+
+    os.makedirs(folder_path)
     for doc in docs:
         doc_filename = str(doc['id']) + '.' + doc['format']
         if doc['link'] is not None:
