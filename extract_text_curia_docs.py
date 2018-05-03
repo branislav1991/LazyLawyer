@@ -1,5 +1,5 @@
 from database.database import CURIACaseDatabase
-from documents import doc_renderer
+from documents import doc_textextractor
 import helpers
 from pathlib import Path
 from tqdm import tqdm
@@ -7,20 +7,18 @@ from tqdm import tqdm
 db = CURIACaseDatabase()
 cases = db.get_all_cases()
 
-def render_docs_for_case(case, docs, output_format, resolution):
-    """Render documents in a case to images.
-    Input params:
-    output_format: 'png' or 'tiff'.
-    resolution: Output resolution in DPI.
+def text_from_docs_for_case(case, docs):
+    """Extract text from documents in a case.
     """
+    output_format = 'json' # json is the only supported text document format
     folder_path = Path('documents/' + helpers.case_name_to_folder(case['name']))
     for doc in docs:
         doc_filename = str(doc['id']) + '.' + doc['format']
         output_filename = str(doc['id']) + '.' + output_format
-        doc_renderer.render_doc(str(folder_path / doc_filename), output_filename,
-            doc['format'], resolution)
+
+        doc_textextractor.extract_text(str(folder_path / doc_filename), output_filename)
 
 for case in tqdm(cases):
     docs = db.get_docs_for_case(case, only_valid=True)
     if len(docs) > 0:
-        render_docs_for_case(case, docs, 'tiff', 300)
+        text_from_docs_for_case(case, docs)

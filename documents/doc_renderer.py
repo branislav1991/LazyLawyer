@@ -45,7 +45,6 @@ def _run_pdfrenderer(args, cwd):
 
     completed_process = subprocess.run([app] + args, env={'PATH': os.getenv('PATH'), 'TEMP': os.getenv('TEMP')}, 
         cwd=cwd, check=True)
-    return 0
 
 def render_pdf(file_path, output_filename, resolution):
     """Render pdf file to a specific format.
@@ -70,3 +69,11 @@ def render_pdf(file_path, output_filename, resolution):
     cwd, filename = os.path.split(file_path)
     args = ['-q',resolutionstr,sdevicestr,compression,outputfilestr,filename,'-c','quit']
     _run_pdfrenderer(args, cwd=cwd)
+
+def render_doc(document_path, output_filename, format, resolution):
+    if format == 'pdf':
+        render_pdf(document_path, output_filename, resolution)
+    elif format == 'html':
+        render_html(document_path, output_filename)
+    else:
+        raise ValueError('Unsupported document format')
