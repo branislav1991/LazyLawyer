@@ -19,7 +19,7 @@ def render_doc(document_path, output_filename, format, resolution):
 def render_docs_for_case(case, docs, output_format, resolution):
     """Render documents in a case to images.
     Input params:
-    output_format: 'png', 'tiff', 'jpg' etc.
+    output_format: 'png' or 'tiff'.
     resolution: Output resolution in DPI.
     """
     folder_path = Path('documents/' + helpers.case_name_to_folder(case['name']))
