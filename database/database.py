@@ -159,12 +159,26 @@ class CURIACaseDatabase(CaseDatabase):
         case: case to get docs for.
         only_valid: only retrieve docs which contain a link.
         """
-
         if only_valid:
             s = """SELECT * FROM docs WHERE case_id=? AND link IS NOT NULL"""
         else:
             s = """SELECT * FROM docs WHERE case_id=?"""
 
         result = self.cursor.execute(s, (case['id'],))
+        rows = result.fetchall()
+        return self._convert_to_docs_dict(rows)
+
+    def get_docs_with_name(self, name, only_valid=True):
+        """Retrieves all documents with a specific name.
+        Input params:
+        name: name of the document to retrieve.
+        only_valid: only retrieve docs which contain a link.
+        """
+        if only_valid:
+            s = """SELECT * FROM docs WHERE name=? AND link IS NOT NULL"""
+        else:
+            s = """SELECT * FROM docs WHERE name=?"""
+
+        result = self.cursor.execute(s, (name,))
         rows = result.fetchall()
         return self._convert_to_docs_dict(rows)
