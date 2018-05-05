@@ -107,7 +107,15 @@ class CURIACaseDatabase(CaseDatabase):
             link TEXT,
             source TEXT,
             format TEXT,
-            FOREIGN KEY (case_id) REFERENCES cases(id) 
+            content_id INTEGER,
+            FOREIGN KEY (case_id) REFERENCES cases(id),
+            FOREIGN KEY (content_id) REFERENCES doc_contents(id)
+            )""")
+        self.cursor.execute("""CREATE TABLE IF NOT EXISTS doc_contents(
+            id INTEGER PRIMARY KEY,
+            content BLOB NOT NULL,
+            doc_id INTEGER NOT NULL,
+            FOREIGN KEY (doc_id) REFERENCES docs(id)
             )""")
 
         self.connection.commit()
