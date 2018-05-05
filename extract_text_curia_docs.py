@@ -21,7 +21,7 @@ def text_from_docs(docs):
     output_format = 'txt' # txt is the only supported text document format
     for doc in docs:
         case = db.get_doc_case(doc)    
-        folder_path = Path('documents/' + helpers.case_name_to_folder(case['name']))
+        folder_path = Path('doc_dir/' + helpers.case_name_to_folder(case['name']))
 
         doc_filename = str(doc['id']) + '.' + doc['format']
         doc_path = str(folder_path / doc_filename)

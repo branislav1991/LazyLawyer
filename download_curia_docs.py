@@ -8,7 +8,7 @@ db = CURIACaseDatabase()
 cases = db.get_all_cases()
 
 bad_cases = [] # docs that could not be downloaded properly
-bad_cases_filepath = 'documents/bad_cases.txt'
+bad_cases_filepath = 'doc_dir/bad_cases.txt'
 
 for case in tqdm(cases):
     docs = db.get_docs_for_case(case, only_valid=True)

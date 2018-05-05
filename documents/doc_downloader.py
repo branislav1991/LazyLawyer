@@ -8,7 +8,7 @@ def download_docs_for_case(case, docs):
     specific case. Stores the document
     under [name].[format].
     """
-    folder_path = Path('documents/' + helpers.case_name_to_folder(case['name']))
+    folder_path = Path('doc_dir/' + helpers.case_name_to_folder(case['name']))
     if os.path.exists(folder_path):
         # we assume that the documents already exists; skip
         return
