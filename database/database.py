@@ -182,3 +182,11 @@ class CURIACaseDatabase(CaseDatabase):
         result = self.cursor.execute(s, (name,))
         rows = result.fetchall()
         return self._convert_to_docs_dict(rows)
+
+    def get_doc_case(self, doc):
+        """Retrieves case for a document.
+        """
+        s = """SELECT * FROM cases WHERE id=?"""
+        result = self.cursor.execute(s, (doc['case_id'],))
+        rows = result.fetchone()
+        return self._convert_to_cases_dict([rows])[0]
