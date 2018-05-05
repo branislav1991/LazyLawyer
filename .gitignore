@@ -107,4 +107,4 @@ ENV/
 *.db
 
 # documents
-documents/*
+doc_dir/*
