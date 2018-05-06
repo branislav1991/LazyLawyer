@@ -17,8 +17,8 @@ def _run_pdfrenderer(args, cwd):
         app = 'gs'
     elif os.name == 'nt':
         app = 'gswin64c'
-
-    completed_process = subprocess.run([app] + args, env={'PATH': os.getenv('PATH'), 'TEMP': os.getenv('TEMP')}, 
+    
+    completed_process = subprocess.run([app] + args, env={'PATH': os.getenv('PATH')}, 
         cwd=cwd, check=True)
 
 def render_pdf(file_path, output_filename, resolution):
