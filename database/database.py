@@ -159,9 +159,6 @@ class CURIACaseDatabase(CaseDatabase):
         doc['id'] to be stored in the doc dict.
         Also checks if doc_content is already stored for this doc.
         """
-        if self.get_doc_content(doc) is not None:
-            return
-
         s = """INSERT INTO doc_contents (content, doc_id) VALUES (?, ?)"""
         self.cursor.execute(s, (text.encode(), doc['id']))
         self.connection.commit()

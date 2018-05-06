@@ -19,6 +19,7 @@ def extract_from_image(file_path):
             cwd=cwd, check=True)
         with open(outputfile_path, 'r', encoding='utf-8') as txt_file:
             text = txt_file.read()
+            text = text.strip()
     finally: 
         # delete temporary text file
         if (os.path.exists(outputfile_path)):

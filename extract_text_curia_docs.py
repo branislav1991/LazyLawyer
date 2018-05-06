@@ -48,6 +48,7 @@ def text_from_doc(doc):
 docs = db.get_docs_with_name('Judgment', only_valid=True)
 if len(docs) > 0:
     for doc in docs:
-        text = text_from_doc(doc)
-        if text is not None:
-            db.write_doc_content(doc, text)
+        if db.get_doc_content(doc) is None:
+            text = text_from_doc(doc)
+            if text is not None:
+                db.write_doc_content(doc, text)
