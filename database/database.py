@@ -141,6 +141,31 @@ class CURIACaseDatabase(CaseDatabase):
             doc['case_id'] = row[0]
         self.batch_insert_check('docs', docs, attrs=['case_id', 'name'])
 
+    def get_doc_content(self, doc):
+        """Retrieves text for a document.
+        """
+        s = """SELECT content FROM doc_contents WHERE doc_id=?"""
+        result = self.cursor.execute(s, (doc['id'],))
+        row = result.fetchone()
+        if row is None:
+            text = None
+        else:
+            text = row[0].decode()
+
+        return text
+
+    def write_doc_content(self, doc, text):
+        """Stores text for a document. Requires
+        doc['id'] to be stored in the doc dict.
+        Also checks if doc_content is already stored for this doc.
+        """
+        if self.get_doc_content(doc) is not None:
+            return
+
+        s = """INSERT INTO doc_contents (content, doc_id) VALUES (?, ?)"""
+        self.cursor.execute(s, (text.encode(), doc['id']))
+        self.connection.commit()
+
     def get_all_cases(self):
         """Retrieves all cases from the database.
         This can be useful e.g. when we want to

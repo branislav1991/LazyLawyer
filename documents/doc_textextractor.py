@@ -1,36 +1,33 @@
 from bs4 import BeautifulSoup
 import os
 import subprocess
+import time
 
-def _run_ocr(filename, outputfilename, cwd):
+def extract_from_image(file_path):
     app = 'tesseract'
 
     psmstr = '--psm 3'
-    base, _ = os.path.splitext(outputfilename)
+    cwd, filename = os.path.split(file_path)
+    base, _ = os.path.splitext(filename)
+    outputfilename = base + '.txt'
+    outputfile_path = os.path.join(cwd, outputfilename)
 
     args = [filename, base, psmstr]
-    completed_process = subprocess.run([app] + args, env={'PATH': os.getenv('PATH')}, 
-        cwd=cwd, check=True)
 
-def _from_html(filename, outputfilename, cwd):
-    with open(os.path.join(cwd, filename), 'r') as file:
+    try:
+        completed_process = subprocess.run([app] + args, env={'PATH': os.getenv('PATH')}, 
+            cwd=cwd, check=True)
+        with open(outputfile_path, 'r', encoding='utf-8') as txt_file:
+            text = txt_file.read()
+    finally: 
+        # delete temporary text file
+        if (os.path.exists(outputfile_path)):
+            os.remove(outputfile_path)
+    return text
+
+def extract_from_html(file_path):
+    with open(os.path.join(file_path), 'r') as file:
         html = BeautifulSoup(file, 'html.parser')
-        txt = html.body.get_text(separator='\n')
-        with open(os.path.join(cwd, outputfilename), 'w') as outputfile:
-            outputfile.write(txt.strip())
-
-def extract_text(filepath, outputfilename):
-    """Extract text from document and generate txt.
-    """
-    # check output format
-    outputfilestr = '-o ' + outputfilename
-    _, format = os.path.splitext(outputfilestr)
-    assert format == '.txt' # we only support txt
-
-    cwd, filename = os.path.split(filepath)
-
-    _, format = os.path.splitext(filepath)
-    if format == '.html':
-        _from_html(filename, outputfilename, cwd)
-    elif format == '.tiff':
-        _run_ocr(filename, outputfilename, cwd)
+        text = html.body.get_text(separator='\n')
+        text = text.strip()
+    return text

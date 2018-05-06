@@ -15,36 +15,39 @@ from tqdm import tqdm
 db = CURIACaseDatabase()
 cases = db.get_all_cases()
 
-def text_from_docs(docs):
+def text_from_doc(doc):
     """Extract text from documents in a case.
     """
-    output_format = 'txt' # txt is the only supported text document format
-    for doc in docs:
-        case = db.get_doc_case(doc)    
-        folder_path = Path('doc_dir/' + helpers.case_name_to_folder(case['name']))
+    case = db.get_doc_case(doc)    
+    folder_path = Path('doc_dir/' + helpers.case_name_to_folder(case['name']))
 
-        doc_filename = str(doc['id']) + '.' + doc['format']
-        doc_path = str(folder_path / doc_filename)
-        output_filename = str(doc['id']) + '.' + output_format
+    doc_filename = str(doc['id']) + '.' + doc['format']
+    doc_path = str(folder_path / doc_filename)
 
-        if doc['format'] == 'pdf':
-            try:
-                # first convert pdf to tiff image
-                img_filename = 'tmp.tiff'
-                doc_renderer.render_doc(doc_path, img_filename, 300)
+    text = None
+    if doc['format'] == 'pdf':
+        pass
+        try:
+            # first convert pdf to tiff image
+            img_filename = 'tmp.tiff'
+            doc_renderer.render_doc(doc_path, img_filename, 300)
 
-                os.rename(str(folder_path / (' ' + img_filename)), str(folder_path / img_filename))
+            os.rename(str(folder_path / (' ' + img_filename)), str(folder_path / img_filename))
 
-                # extract text from tiff and delete it
-                doc_textextractor.extract_text(str(folder_path / img_filename), output_filename)
-            finally:
-                if (os.path.exists(str(folder_path / img_filename))):
-                    os.remove(str(folder_path / img_filename))
+            # extract text from tiff and delete it
+            text = doc_textextractor.extract_from_image(str(folder_path / img_filename))
+        finally:
+            if (os.path.exists(str(folder_path / img_filename))):
+                os.remove(str(folder_path / img_filename))
 
-        elif doc['format'] == 'html':
-            output_filename = str(doc['id']) + '.' + output_format
-            doc_textextractor.extract_text(str(folder_path / doc_filename), output_filename)
+    elif doc['format'] == 'html':
+        text = doc_textextractor.extract_from_html(str(folder_path / doc_filename))
+
+    return text
 
 docs = db.get_docs_with_name('Judgment', only_valid=True)
 if len(docs) > 0:
-    text_from_docs(docs)
+    for doc in docs:
+        text = text_from_doc(doc)
+        if text is not None:
+            db.write_doc_content(doc, text)
