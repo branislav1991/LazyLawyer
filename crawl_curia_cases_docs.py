@@ -1,7 +1,7 @@
 """This script crawls the CURIA database and saves all cases
 and relevant document links for each case to the database.
 """
-
+import concurrent.futures
 from crawlers.crawlers import CURIACrawler
 from database.database import CURIACaseDatabase
 from tqdm import tqdm
@@ -21,10 +21,23 @@ try:
         cases = crawler.crawl_ecj_cases()
         db.write_cases(cases)
 
-    for case in tqdm(cases):
-        docs = crawler.crawl_case_docs(case, formats)
-        if docs is not None:
-            db.write_docs(case, docs)
+    partition_size = 50
+    cases_part = [cases[i:i + partition_size] for i in range(0, len(cases), partition_size)] # partition cases
+    for partition in tqdm(cases_part):
+        with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+            futures_cases = {executor.submit(crawler.crawl_case_docs, case, formats):case for case in partition}
+
+        for future in concurrent.futures.as_completed(futures_cases):
+            case = futures_cases[future]
+            docs = future.result()
+            if docs is not None:
+                db.write_docs(case, docs)
+
+    # for case in tqdm(cases):
+    #     future = executor.submit(crawler.crawl_case_docs, case, formats)
+    #     docs = crawler.crawl_case_docs(case, formats)
+    #     if docs is not None:
+    #         db.write_docs(case, docs)
 
 finally:
     db.close()
