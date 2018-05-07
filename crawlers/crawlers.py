@@ -22,7 +22,7 @@ class CURIACrawler(Crawler):
         """
         cases_dict = []
         for link in self.eu_case_law_links:
-            html = self._crawl(link['url'])
+            html = crawlers.helpers.crawl(link['url'])
             protocol = helpers.import_by_name(link['protocol'])
             cases = protocol.crawl_cases(html)
             for c in cases: # append protocol to each case to know how it was crawled

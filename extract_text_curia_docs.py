@@ -26,7 +26,6 @@ def text_from_doc(doc):
 
     text = None
     if doc['format'] == 'pdf':
-        pass
         try:
             # first convert pdf to tiff image
             img_filename = 'tmp.tiff'
@@ -48,7 +47,11 @@ def text_from_doc(doc):
 docs = db.get_docs_with_name('Judgment', only_valid=True)
 if len(docs) > 0:
     for doc in docs:
-        if db.get_doc_content(doc) is None:
+        # first check if document could be downloaded
+        if doc['download_error'] is None or doc['download_error'] > 0:
+            continue
+
+        if doc['content_id'] is None:
             text = text_from_doc(doc)
             if text is not None:
                 db.write_doc_content(doc, text)

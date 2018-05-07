@@ -15,11 +15,12 @@ def _run_pdfrenderer(args, cwd):
     """
     if os.name == 'posix':
         app = 'gs'
+        completed_process = subprocess.run([app] + args, env={'PATH': os.getenv('PATH')}, 
+            cwd=cwd, check=True)
     elif os.name == 'nt':
         app = 'gswin64c'
-    
-    completed_process = subprocess.run([app] + args, env={'PATH': os.getenv('PATH')}, 
-        cwd=cwd, check=True)
+        completed_process = subprocess.run([app] + args, env={'PATH': os.getenv('PATH'), 'TEMP': os.getenv('TEMP')}, 
+                cwd=cwd, check=True)
 
 def render_pdf(file_path, output_filename, resolution):
     """Render pdf file to a specific format.

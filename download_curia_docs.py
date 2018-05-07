@@ -7,18 +7,11 @@ from tqdm import tqdm
 db = CURIACaseDatabase()
 cases = db.get_all_cases()
 
-bad_cases = [] # docs that could not be downloaded properly
-bad_cases_filepath = 'doc_dir/bad_cases.txt'
-
 for case in tqdm(cases):
     docs = db.get_docs_for_case(case, only_valid=True)
     if len(docs) > 0:
         try:
             doc_downloader.download_docs_for_case(case, docs)
+            db.write_download_error(case, 0)
         except HTTPError:
-            bad_cases.append(case)
-
-# document bad cases
-if len(bad_cases) > 0:
-    with open(bad_cases_filepath, 'w') as file:
-        json.dump(bad_cases, file)
+            db.write_download_error(case, 1)

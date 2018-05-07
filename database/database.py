@@ -81,7 +81,8 @@ class CURIACaseDatabase(CaseDatabase):
     def _convert_to_docs_dict(self, db_rows):
         docs = [{'id': x[0], 'case_id': x[1], 'name': x[2], 'ecli': x[3], 'date': x[4],
                 'parties': x[5], 'subject': x[6], 'link': x[7],
-                'source': x[8], 'format': x[9]} for x in db_rows]
+                'source': x[8], 'format': x[9], 'content_id': x[10],
+                'download_error': x[11]} for x in db_rows]
         return docs
 
     def create_tables(self, remove_old=False):
@@ -89,12 +90,14 @@ class CURIACaseDatabase(CaseDatabase):
             self.cursor.execute("""DROP TABLE IF EXISTS cases""")
             self.cursor.execute("""DROP TABLE IF EXISTS docs""")
 
+        # download_error column indicates if there was an error downloading docs for 
+        # the case. If 0, no problem, of 1, problem. If NULL, no download attempts yet.
         self.cursor.execute("""CREATE TABLE IF NOT EXISTS cases(
             id INTEGER PRIMARY KEY,
             name TEXT NOT NULL,
             desc TEXT NOT NULL, 
             url TEXT NOT NULL,
-            protocol TEXT NOT NULL 
+            protocol TEXT NOT NULL
             )""") 
         self.cursor.execute("""CREATE TABLE IF NOT EXISTS docs(
             id INTEGER PRIMARY KEY,
@@ -108,6 +111,7 @@ class CURIACaseDatabase(CaseDatabase):
             source TEXT,
             format TEXT,
             content_id INTEGER,
+            download_error INTEGER,
             FOREIGN KEY (case_id) REFERENCES cases(id),
             FOREIGN KEY (content_id) REFERENCES doc_contents(id)
             )""")
@@ -141,26 +145,20 @@ class CURIACaseDatabase(CaseDatabase):
             doc['case_id'] = row[0]
         self.batch_insert_check('docs', docs, attrs=['case_id', 'name'])
 
-    def get_doc_content(self, doc):
-        """Retrieves text for a document.
-        """
-        s = """SELECT content FROM doc_contents WHERE doc_id=?"""
-        result = self.cursor.execute(s, (doc['id'],))
-        row = result.fetchone()
-        if row is None:
-            text = None
-        else:
-            text = row[0].decode()
-
-        return text
-
     def write_doc_content(self, doc, text):
         """Stores text for a document. Requires
         doc['id'] to be stored in the doc dict.
-        Also checks if doc_content is already stored for this doc.
         """
+        if doc['content_id'] is not None: # check if no content assigned yet
+            return
+
         s = """INSERT INTO doc_contents (content, doc_id) VALUES (?, ?)"""
         self.cursor.execute(s, (text.encode(), doc['id']))
+        self.connection.commit()
+
+        self.cursor.lastrowid
+        s = """UPDATE docs SET content_id=? WHERE id=?"""
+        self.cursor.execute(s, (self.cursor.lastrowid, doc['id']))
         self.connection.commit()
 
     def get_all_cases(self):
@@ -220,3 +218,8 @@ class CURIACaseDatabase(CaseDatabase):
         result = self.cursor.execute(s, (doc['case_id'],))
         rows = result.fetchone()
         return self._convert_to_cases_dict([rows])[0]
+
+    def write_download_error(self, case, result):
+        s = """UPDATE docs SET download_error=? WHERE case_id=?"""
+        result = self.cursor.execute(s, (result, case['id']))
+        self.connection.commit()

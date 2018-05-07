@@ -32,6 +32,7 @@ def _crawl_doc(html_tr, formats):
         # Try to get documents in the formats given. First format
         # in the list gets precedence over the second etc.
         # Similarly, the hardcoded sources are scanned from first to last.
+        link = None
         if (fs[0] == 'pdf'):
             if (fs[1] == 'curia'):
                 links_curia = html_tr.find('td', {'class': 'table_cell_links_eurlex'}) \
