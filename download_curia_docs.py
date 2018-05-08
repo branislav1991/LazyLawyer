@@ -16,22 +16,16 @@ cases = db.get_all_cases()
 def get_and_download_docs(case):
     # in this step we also skip documents which have already been downloaded
     docs = db.get_docs_for_case(case, only_with_link=True, downloaded=False)
-    if len(docs) > 0:
-        doc_downloader.download_docs_for_case(case, docs)
+    for doc in docs:
+        try:
+            doc_downloader.download_doc_for_case(case, doc)
+            db.write_download_error(doc, 0)
+        except HTTPError:
+            db.write_download_error(doc, 1)
 
 def main():
     for case in tqdm(cases):
         get_and_download_docs(case)
-        db.write_download_error(case, 0)
 
 if __name__ == '__main__':
     main()
-
-# for case in tqdm(cases):
-#     docs = db.get_docs_for_case(case, only_valid=True)
-#     if len(docs) > 0:
-#         try:
-#             doc_downloader.download_docs_for_case(case, docs)
-#             db.write_download_error(case, 0)
-#         except HTTPError:
-#             db.write_download_error(case, 1)

@@ -255,7 +255,7 @@ class CURIACaseDatabase(CaseDatabase):
         rows = self.cursor.fetchone()
         return self._convert_to_cases_dict([rows])[0]
 
-    def write_download_error(self, case, result):
-        s = """UPDATE docs SET download_error=? WHERE case_id=?"""
-        result = self.cursor.execute(s, (result, case['id']))
+    def write_download_error(self, doc, result):
+        s = """UPDATE docs SET download_error=? WHERE id=?"""
+        result = self.cursor.execute(s, (result, doc['id']))
         self.connection.commit()
