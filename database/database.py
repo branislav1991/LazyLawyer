@@ -1,6 +1,39 @@
+"""Database interface. The database is made
+thread-safe by locking the cursor. Therefore it
+is safe to call database functions from multiple
+threads at once.
+"""
+
 import helpers
 import json
 import sqlite3
+import threading
+
+class ThreadSafeCursor:
+    _lock = threading.Lock()
+
+    def __init__(self, connection):
+        self._cursor = connection.cursor()
+
+    def execute(self, str, *params):
+        with ThreadSafeCursor._lock:
+            result = self._cursor.execute(str, *params)
+        return result
+
+    def executemany(self, str, seq_of_params):
+        with ThreadSafeCursor._lock:
+            result = self._cursor.executemany(str, seq_of_params)
+        return result
+
+    def fetchone(self):
+        with ThreadSafeCursor._lock:
+            result = self._cursor.fetchone()
+        return result
+
+    def fetchall(self):
+        with ThreadSafeCursor._lock:
+            result = self._cursor.fetchall()
+        return result
 
 class CaseDatabase:
     SETUP_FILE_PATH = 'database/db_setup.json'
@@ -10,7 +43,7 @@ class CaseDatabase:
             setup_json = json.load(setup_file) 
             db_path = setup_json['db_path']
         self.connection = sqlite3.connect(db_path, check_same_thread=False)
-        self.cursor = self.connection.cursor()
+        self.cursor = ThreadSafeCursor(self.connection)
 
     def close(self):
         self.connection.close()
@@ -34,8 +67,8 @@ class CaseDatabase:
         s += table
         s += ' WHERE '
         s += ' AND '.join(conditions)
-        result = self.cursor.execute(s)
-        rows = result.fetchall()
+        self.cursor.execute(s)
+        rows = self.cursor.fetchall()
 
         batchnames = [x[0] for x in rows]
         batch = [x for x in batch if x['name'] not in batchnames]
@@ -138,8 +171,8 @@ class CURIACaseDatabase(CaseDatabase):
         docs: a dictionary of documents.
         """
         s = """SELECT id FROM cases WHERE name=? AND desc=? AND url=?"""
-        result = self.cursor.execute(s, (case['name'], case['desc'], case['url']))
-        row = result.fetchone()
+        self.cursor.execute(s, (case['name'], case['desc'], case['url']))
+        row = self.cursor.fetchone()
 
         for doc in docs:
             doc['case_id'] = row[0]
@@ -167,8 +200,8 @@ class CURIACaseDatabase(CaseDatabase):
         bulk download or crawl.
         """
         s = """SELECT * FROM cases"""
-        result = self.cursor.execute(s)
-        rows = result.fetchall()
+        self.cursor.execute(s)
+        rows = self.cursor.fetchall()
         return self._convert_to_cases_dict(rows)
 
     def get_max_case_id_in_docs(self):
@@ -177,8 +210,8 @@ class CURIACaseDatabase(CaseDatabase):
         table with new cases.
         """
         s = """SELECT MAX(case_id) FROM docs"""
-        result = self.cursor.execute(s)
-        row = result.fetchone()
+        self.cursor.execute(s)
+        row = self.cursor.fetchone()
         return -1 if row[0] is None else row[0]
 
     def get_docs_for_case(self, case, only_valid=True):
@@ -192,8 +225,8 @@ class CURIACaseDatabase(CaseDatabase):
         else:
             s = """SELECT * FROM docs WHERE case_id=?"""
 
-        result = self.cursor.execute(s, (case['id'],))
-        rows = result.fetchall()
+        self.cursor.execute(s, (case['id'],))
+        rows = self.cursor.fetchall()
         return self._convert_to_docs_dict(rows)
 
     def get_docs_with_name(self, name, only_valid=True):
@@ -207,16 +240,16 @@ class CURIACaseDatabase(CaseDatabase):
         else:
             s = """SELECT * FROM docs WHERE name=?"""
 
-        result = self.cursor.execute(s, (name,))
-        rows = result.fetchall()
+        self.cursor.execute(s, (name,))
+        rows = self.cursor.fetchall()
         return self._convert_to_docs_dict(rows)
 
     def get_doc_case(self, doc):
         """Retrieves case for a document.
         """
         s = """SELECT * FROM cases WHERE id=?"""
-        result = self.cursor.execute(s, (doc['case_id'],))
-        rows = result.fetchone()
+        self.cursor.execute(s, (doc['case_id'],))
+        rows = self.cursor.fetchone()
         return self._convert_to_cases_dict([rows])[0]
 
     def write_download_error(self, case, result):

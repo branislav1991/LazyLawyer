@@ -8,17 +8,13 @@ from database.database import CURIACaseDatabase
 import helpers
 import json
 from requests.exceptions import HTTPError
-import threading
 from tqdm import tqdm
 
 db = CURIACaseDatabase()
 cases = db.get_all_cases()
-lock = threading.Lock()
 
 def get_and_download_docs(case):
-    lock.acquire(True) 
     docs = db.get_docs_for_case(case, only_valid=True)
-    lock.release()
     if len(docs) > 0:
         doc_downloader.download_docs_for_case(case, docs)
 
