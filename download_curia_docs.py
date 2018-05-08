@@ -14,23 +14,15 @@ db = CURIACaseDatabase()
 cases = db.get_all_cases()
 
 def get_and_download_docs(case):
-    docs = db.get_docs_for_case(case, only_valid=True)
+    # in this step we also skip documents which have already been downloaded
+    docs = db.get_docs_for_case(case, only_with_link=True, downloaded=False)
     if len(docs) > 0:
         doc_downloader.download_docs_for_case(case, docs)
 
 def main():
-    cases_batches = helpers.create_batches_list(cases, 10)
-    for batch in tqdm(cases_batches):
-        with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
-            futures_cases = {executor.submit(get_and_download_docs, case):case for case in batch}
-
-        for future in concurrent.futures.as_completed(futures_cases):
-            case = futures_cases[future]
-            try:
-                docs = future.result()
-                db.write_download_error(case, 0)
-            except HTTPError:
-                db.write_download_error(case, 1)
+    for case in tqdm(cases):
+        get_and_download_docs(case)
+        db.write_download_error(case, 0)
 
 if __name__ == '__main__':
     main()
