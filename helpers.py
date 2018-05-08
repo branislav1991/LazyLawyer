@@ -18,11 +18,19 @@ def download_file(url, filename):
     else:
         response.raise_for_status()
 
-def create_batches(list, batch_size):
+def create_batches_generate(list, batch_size):
+    """Generate batches using a generator.
+    """
     # For item i in a range that is a length of l,
     for i in range(0, len(list), batch_size):
         # Create an index range for l of n items:
         yield list[i:i+batch_size]
+
+def create_batches_list(list, batch_size):
+    """Return list of batches.
+    """
+    batches = [list[i:i + batch_size] for i in range(0, len(list), batch_size)]
+    return batches
 
 def create_folder_if_not_exists(dir):
     if not os.path.exists(dir):

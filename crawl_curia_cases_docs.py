@@ -4,6 +4,7 @@ and relevant document links for each case to the database.
 import concurrent.futures
 from crawlers.crawlers import CURIACrawler
 from database.database import CURIACaseDatabase
+import helpers
 from tqdm import tqdm
 
 crawl_docs_only = True # if this is true, only docs are crawled instead of cases and docs
@@ -21,23 +22,16 @@ try:
         cases = crawler.crawl_ecj_cases()
         db.write_cases(cases)
 
-    partition_size = 50
-    cases_part = [cases[i:i + partition_size] for i in range(0, len(cases), partition_size)] # partition cases
-    for partition in tqdm(cases_part):
+    cases_batches = helpers.create_batches_list(cases, 50)
+    for batch in tqdm(cases_batches):
         with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
-            futures_cases = {executor.submit(crawler.crawl_case_docs, case, formats):case for case in partition}
+            futures_cases = {executor.submit(crawler.crawl_case_docs, case, formats):case for case in batch}
 
         for future in concurrent.futures.as_completed(futures_cases):
             case = futures_cases[future]
             docs = future.result()
             if docs is not None:
                 db.write_docs(case, docs)
-
-    # for case in tqdm(cases):
-    #     future = executor.submit(crawler.crawl_case_docs, case, formats)
-    #     docs = crawler.crawl_case_docs(case, formats)
-    #     if docs is not None:
-    #         db.write_docs(case, docs)
 
 finally:
     db.close()

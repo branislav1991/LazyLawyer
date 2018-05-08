@@ -9,7 +9,7 @@ class CaseDatabase:
         with open(CaseDatabase.SETUP_FILE_PATH, 'r') as setup_file:
             setup_json = json.load(setup_file) 
             db_path = setup_json['db_path']
-        self.connection = sqlite3.connect(db_path)
+        self.connection = sqlite3.connect(db_path, check_same_thread=False)
         self.cursor = self.connection.cursor()
 
     def close(self):
@@ -63,7 +63,7 @@ class CaseDatabase:
         verify if data is already in the database based on the attributes
         (columns) defined in attrs.
         """
-        batches = list(helpers.create_batches(vals, batch_size))
+        batches = list(helpers.create_batches_generate(vals, batch_size))
         for batch in batches:
             batch = self._batch_check_existing(batch, table, attrs)
             if len(batch) > 0:
