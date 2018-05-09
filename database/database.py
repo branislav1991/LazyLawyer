@@ -35,6 +35,9 @@ class ThreadSafeCursor:
             result = self._cursor.fetchall()
         return result
 
+    def lastrowid(self):
+        return self._cursor.lastrowid
+
 class CaseDatabase:
     SETUP_FILE_PATH = 'database/db_setup.json'
 
@@ -189,9 +192,8 @@ class CURIACaseDatabase(CaseDatabase):
         self.cursor.execute(s, (text.encode(), doc['id']))
         self.connection.commit()
 
-        self.cursor.lastrowid
         s = """UPDATE docs SET content_id=? WHERE id=?"""
-        self.cursor.execute(s, (self.cursor.lastrowid, doc['id']))
+        self.cursor.execute(s, (self.cursor.lastrowid(), doc['id']))
         self.connection.commit()
 
     def get_all_cases(self):
