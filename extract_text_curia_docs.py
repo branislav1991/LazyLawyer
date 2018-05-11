@@ -12,9 +12,6 @@ import os
 from pathlib import Path
 from tqdm import tqdm
 
-db = CURIACaseDatabase()
-cases = db.get_all_cases()
-
 def text_from_doc(doc):
     """Extract text from documents in a case.
     """
@@ -44,14 +41,21 @@ def text_from_doc(doc):
 
     return text
 
-docs = db.get_docs_with_name('Judgment', only_valid=True)
-if len(docs) > 0:
-    for doc in docs:
-        # first check if document could be downloaded
-        if doc['download_error'] is None or doc['download_error'] > 0:
-            continue
+def main():
+    db = CURIACaseDatabase()
+    cases = db.get_all_cases()
 
-        if doc['content_id'] is None:
-            text = text_from_doc(doc)
-            if text is not None:
-                db.write_doc_content(doc, text)
+    docs = db.get_docs_with_name('Judgment', only_valid=True)
+    if len(docs) > 0:
+        for doc in docs:
+            # first check if document could be downloaded
+            if doc['download_error'] is None or doc['download_error'] > 0:
+                continue
+
+            if doc['content_id'] is None:
+                text = text_from_doc(doc)
+                if text is not None:
+                    db.write_doc_content(doc, text)
+
+if __name__ == '__main__':
+    main()

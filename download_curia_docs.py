@@ -10,9 +10,6 @@ import json
 from requests.exceptions import HTTPError
 from tqdm import tqdm
 
-db = CURIACaseDatabase()
-cases = db.get_all_cases()
-
 def get_and_download_docs(case):
     # in this step we also skip documents which have already been downloaded
     docs = db.get_docs_for_case(case, only_with_link=True, downloaded=False)
@@ -24,6 +21,9 @@ def get_and_download_docs(case):
             db.write_download_error(doc, 1)
 
 def main():
+    db = CURIACaseDatabase()
+    cases = db.get_all_cases()
+
     for case in tqdm(cases):
         get_and_download_docs(case)
 

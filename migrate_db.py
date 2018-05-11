@@ -2,5 +2,9 @@
 """
 from database.database import CURIACaseDatabase
 
-db = CURIACaseDatabase()
-db.create_tables(remove_old=True)
+def main():
+    db = CURIACaseDatabase()
+    db.create_tables(remove_old=True)
+
+if __name__ == '__main__':
+    main()
