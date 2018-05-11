@@ -196,6 +196,19 @@ class CURIACaseDatabase(CaseDatabase):
         self.cursor.execute(s, (self.cursor.lastrowid(), doc['id']))
         self.connection.commit()
 
+    def get_doc_content(self, doc):
+        """Returns content for a document or None if
+        no content was stored. Requires doc['id'] to be
+        stored in the doc dict.
+        """
+        if doc['content_id'] is None:
+            return None
+        
+        s = """SELECT content FROM doc_contents WHERE id=?"""
+        self.cursor.execute(s, (doc['content_id'],))
+        row = self.cursor.fetchone()
+        return row[0]
+
     def get_all_cases(self):
         """Retrieves all cases from the database.
         This can be useful e.g. when we want to
