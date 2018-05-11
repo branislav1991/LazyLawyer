@@ -1,9 +1,8 @@
 """This script performs migration of the database.
 """
-from database.database import CURIACaseDatabase
+from database import database as db
 
 def main():
-    db = CURIACaseDatabase()
     db.create_tables(remove_old=True)
 
 if __name__ == '__main__':

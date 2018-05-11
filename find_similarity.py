@@ -1,11 +1,9 @@
-from database.database import CURIACaseDatabase
+from database import table_docs, table_doc_contents
 from nlp import doc_similarity
 
-db = CURIACaseDatabase()
-
-docs = db.get_docs_with_name('Judgment')
-docs = docs[:10]
-contents = [db.get_doc_content(doc).decode() for doc in docs]
+docs = table_docs.get_docs_with_name('Judgment')
+docs = docs[:5]
+contents = [table_doc_contents.get_doc_content(doc).decode() for doc in docs]
 
 for content1 in contents:
     for content2 in contents:

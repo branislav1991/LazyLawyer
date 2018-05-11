@@ -5,7 +5,7 @@ PDF documents are converted to an image format first (e.g. tiff) and
 then processed with tesseract-ocr.
 """
 
-from database.database import CURIACaseDatabase
+from database import table_cases, table_docs, table_doc_contents
 from documents import doc_textextractor, doc_renderer
 import helpers
 import os
@@ -15,7 +15,7 @@ from tqdm import tqdm
 def text_from_doc(doc):
     """Extract text from documents in a case.
     """
-    case = db.get_doc_case(doc)    
+    case = table_docs.get_doc_case(doc)    
     folder_path = Path('doc_dir/' + helpers.case_name_to_folder(case['name']))
 
     doc_filename = str(doc['id']) + '.' + doc['format']
@@ -42,10 +42,9 @@ def text_from_doc(doc):
     return text
 
 def main():
-    db = CURIACaseDatabase()
-    cases = db.get_all_cases()
+    cases = table_cases.get_all_cases()
 
-    docs = db.get_docs_with_name('Judgment', only_valid=True)
+    docs = table_docs.get_docs_with_name('Judgment', only_valid=True)
     if len(docs) > 0:
         for doc in docs:
             # first check if document could be downloaded
@@ -55,7 +54,7 @@ def main():
             if doc['content_id'] is None:
                 text = text_from_doc(doc)
                 if text is not None:
-                    db.write_doc_content(doc, text)
+                    table_doc_contents.write_doc_content(doc, text)
 
 if __name__ == '__main__':
     main()

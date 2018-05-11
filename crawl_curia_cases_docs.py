@@ -3,7 +3,7 @@ and relevant document links for each case to the database.
 """
 import concurrent.futures
 from crawlers.crawlers import CURIACrawler
-from database.database import CURIACaseDatabase
+from database import table_cases, table_docs
 import helpers
 from tqdm import tqdm
 
@@ -13,29 +13,24 @@ def main():
 
     crawler = CURIACrawler() 
 
-    try:
-        db = CURIACaseDatabase()
-        if crawl_docs_only:
-            cases = db.get_all_cases() 
-            max_case_id = db.get_max_case_id_in_docs()
-            cases = [x for x in cases if x['id'] > max_case_id]
-        else:
-            cases = crawler.crawl_ecj_cases()
-            db.write_cases(cases)
+    if crawl_docs_only:
+        cases = table_cases.get_all_cases() 
+        max_case_id = table_docs.get_max_case_id_in_docs()
+        cases = [x for x in cases if x['id'] > max_case_id]
+    else:
+        cases = crawler.crawl_ecj_cases()
+        table_cases.write_cases(cases)
 
-        cases_batches = helpers.create_batches_list(cases, 50)
-        for batch in tqdm(cases_batches):
-            with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
-                futures_cases = {executor.submit(crawler.crawl_case_docs, case, formats):case for case in batch}
+    cases_batches = helpers.create_batches_list(cases, 50)
+    for batch in tqdm(cases_batches):
+        with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+            futures_cases = {executor.submit(crawler.crawl_case_docs, case, formats):case for case in batch}
 
-            for future in concurrent.futures.as_completed(futures_cases):
-                case = futures_cases[future]
-                docs = future.result()
-                if docs is not None:
-                    db.write_docs(case, docs)
-
-    finally:
-        db.close()
+        for future in concurrent.futures.as_completed(futures_cases):
+            case = futures_cases[future]
+            docs = future.result()
+            if docs is not None:
+                table_docs.write_docs_for_case(case, docs)
 
 if __name__ == '__main__':
     main()
