@@ -4,16 +4,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" integrity="sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB" crossorigin="anonymous">
+    <link rel="stylesheet" href="{{ url_for('static',filename='site.css') }}">
     <title>CodEx AI</title>
 </head>
 
 <body>
-    <h1>CodEx AI</h1>
-    <form name="search_form" action="/search" method="POST">
-        <p>Paste a short description of your case in the textarea below:</p>
-        <textarea name="search_text" rows="8" cols="100">Short description of your case.</textarea>
-        <input type="submit" value="Search" />
-    </form>
+    <div class="container">
+        <div class="row justify-content-center align-self-center">
+            <div class="col-sm-6">
+                <div class="jumbotron vertical-center text-center">
+                    <h1 class="text-center">CodEx AI</h1>
+                    <form name="search_form" action="/search" method="POST">
+                        <div class="form-group">
+                            <textarea name="search_text" class="form-control" rows="8">Put a short description of your case here.</textarea>
+                        </div>
+                        <div class="d-flex justify-content-center">
+                            <button class="btn btn-primary" type="submit">Search</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Optional JavaScript -->
     <!-- jQuery first, then Popper.js, then Bootstrap JS -->

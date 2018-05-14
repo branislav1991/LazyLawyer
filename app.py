@@ -16,6 +16,6 @@ def search():
     docs = docs[:10]
     doc_abstracts = [table_doc_contents.get_doc_content(x) for x in docs]
     doc_abstracts = [shorten(x, width=200) for x in doc_abstracts]
-    results = [{'name': doc['name'], 'abstract': abstract} for doc, abstract in zip(docs, doc_abstracts)]
+    results = [{'link': doc['link'], 'name': doc['name'], 'abstract': abstract} for doc, abstract in zip(docs, doc_abstracts)]
 
     return render_template('search_results.html', results=results)
