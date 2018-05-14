@@ -26,4 +26,4 @@ def get_doc_content(doc):
     s = """SELECT content FROM doc_contents WHERE id=?"""
     db.cursor.execute(s, (doc['content_id'],))
     row = db.cursor.fetchone()
-    return row[0]
+    return row[0].decode()

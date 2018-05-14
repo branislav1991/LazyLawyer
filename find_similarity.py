@@ -3,7 +3,7 @@ from nlp import doc_similarity
 
 docs = table_docs.get_docs_with_name('Judgment')
 docs = docs[:5]
-contents = [table_doc_contents.get_doc_content(doc).decode() for doc in docs]
+contents = [table_doc_contents.get_doc_content(doc) for doc in docs]
 
 for content1 in contents:
     for content2 in contents:
