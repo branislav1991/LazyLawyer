@@ -1,15 +1,12 @@
 from collections import defaultdict
 from gensim import corpora, models
 import numpy as np
+from nlp.preprocessing import normalize_text
 import regex
 import spacy
 from spacy.tokenizer import Tokenizer
 
 nlp = spacy.load('en_core_web_sm')
-
-def normalize_text(text):
-    text = text.lower()
-    return text
 
 def similarity(content1, content2):
     content1 = normalize_text(content1)
