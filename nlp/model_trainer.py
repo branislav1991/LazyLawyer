@@ -49,5 +49,5 @@ def train_model(content_generator, save_path):
     """
     tokens = ContentProcessor(content_generator)
     print('Training Word2Vec model...')
-    model = models.Word2Vec(tokens, size=200, negative=10, window=5, min_count=5, workers=4, iter=2)
+    model = models.Word2Vec(tokens, size=200, negative=10, window=5, min_count=5, workers=4, iter=20)
     model.save(save_path)
