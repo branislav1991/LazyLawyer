@@ -20,6 +20,7 @@
                     {% for result in results %}
                     <tr>
                     <td scope="row">{{result.name}}</td>
+                    <td>{{result.similarity}}</td>
                     <td>{{result.abstract}}</td>
                     <td class="align-middle"><a href="{{result.link}}" class="btn btn-info">View</a></td>
                     </tr>
