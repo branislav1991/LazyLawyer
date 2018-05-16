@@ -108,3 +108,7 @@ ENV/
 
 # documents
 doc_dir/*
+
+# npy and pickle binary files
+*.npy
+*.pickle

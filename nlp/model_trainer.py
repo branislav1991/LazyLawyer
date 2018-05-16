@@ -40,7 +40,7 @@ class ContentProcessor():
     def __iter__(self):
         return self
 
-def train_model(content_generator, num_contents, save_path):
+def train_model(content_generator, save_path):
     """Trains a Word2Vec model using the contents supplied by
     content_generator. content_generator has to be an infinite
     generator. num_contents specifies the number of contents to
