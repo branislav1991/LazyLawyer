@@ -1,0 +1,4 @@
+{
+    "db_path": "database/curia.db",
+    "model_path": "word2vec_model.pickle"
+}

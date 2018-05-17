@@ -1,5 +1,10 @@
+import json
 import os
 import requests
+
+SETUP_FILE_PATH = 'setup.json'
+with open(SETUP_FILE_PATH, 'r') as setup_file:
+    setup_json = json.load(setup_file) 
 
 def import_by_name(name):
     """Imports a python module by its

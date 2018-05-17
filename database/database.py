@@ -5,11 +5,8 @@ threads at once.
 """
 import atexit
 import helpers
-import json
 import sqlite3
 import threading
-
-SETUP_FILE_PATH = 'database/db_setup.json'
 
 class ThreadSafeCursor:
     _lock = threading.Lock()
@@ -41,9 +38,7 @@ class ThreadSafeCursor:
         return self._cursor.lastrowid
 
 # initialize database connection
-with open(SETUP_FILE_PATH, 'r') as setup_file:
-    setup_json = json.load(setup_file) 
-    db_path = setup_json['db_path']
+db_path = helpers.setup_json['db_path']
 connection = sqlite3.connect(db_path, check_same_thread=False)
 cursor = ThreadSafeCursor(connection)
 
