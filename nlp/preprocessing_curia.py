@@ -13,10 +13,13 @@ class CURIAContentProcessor():
         with open(helpers.setup_json['stopwords_path'], 'r') as stopwords:
             self.stopwords = set(stopwords.read().split(','))
 
-    def __next__(self):
-        content = next(self.content_generator)
-
+    def preprocess_and_buffer(self, content):
+        """Preprocesses content of a given document and
+        adds the preprocessed tokenized sentences to the
+        buffered_sents list.
+        """
         print('Preprocessing document...')
+
         # remove header
         content = re.split(r"(?i)gives the following[\S\s]*?judgment", content)
         if len(content) < 2:
@@ -48,8 +51,14 @@ class CURIAContentProcessor():
 
         tokens = [[word.lower() for word in sent] for sent in tokens] # lowercase words
         tokens = [[word for word in sent if word not in self.stopwords] for sent in tokens] # remove stopwords
+        self.buffered_sents.extend(tokens)
 
-        return tokens
+    def __next__(self):
+        if len(self.buffered_sents) < 1:
+            content = next(self.content_generator)
+            self.preprocess_and_buffer(content)
+
+        return self.buffered_sents.pop(0)
 
     def __iter__(self):
         return self
