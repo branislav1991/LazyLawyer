@@ -1,4 +1,5 @@
 {
     "db_path": "database/curia.db",
-    "model_path": "word2vec_model.pickle"
+    "model_path": "word2vec_model.pickle",
+    "stopwords_path": "nlp/stopwords.txt"
 }
