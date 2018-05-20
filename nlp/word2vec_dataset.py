@@ -4,30 +4,34 @@ import numpy as np
 
 import math
 import os
+import pickle
 import random
 
 from six.moves import urllib
 from six.moves import xrange  # pylint: disable=redefined-builtin
 
 class Word2VecDataset():
-    def __init__(self, sentences, vocabulary_size, window_size, batch_size, neg_sample_num):
+    def __init__(self, vocabulary_size, window_size, batch_size, neg_sample_num):
         """Takes a sentences generator as input as well as
         the desired vocabulary size.
         """
         self.window_size = window_size
         self.batch_size = batch_size
         self.neg_sample_num = neg_sample_num
-
         self.vocabulary_size = vocabulary_size
-        self.sentences = sentences
-        self.words = list(itertools.chain.from_iterable(self.sentences))
+
+        self.data_index = 0 # iteration index
+
+    def initialize_vocab(self, sentences):
+        self.words = list(itertools.chain.from_iterable(sentences))
 
         indexed_words, self.count, self.vocab_words = self.build_dataset(self.words,
                                                                 self.vocabulary_size) 
         self.train_data = self.subsampling(indexed_words)
         self.sample_table = self.init_sample_table()
 
-        self.data_index = 0 # iteration index
+    def load_vocab(self, path):
+        pass
 
     def build_dataset(self, words, n_words):
         """Process word inputs into an index and build
@@ -48,18 +52,32 @@ class Word2VecDataset():
                 unk_count += 1
             data.append(index)
         count[0][1] = unk_count
-        reversed_dictionary = dict(zip(dictionary.values(), dictionary.keys()))
-        return data, count, reversed_dictionary
+        return data, count, dictionary
+
+    def get_index(self, word):
+        """Returns word index or -1 if word is not
+        in dictionary.
+        """
+        idx = self.vocab_words.get(word)
+        return -1 if idx is None else idx
+
+    def load_vocab(self, path):
+        """Load vocabulary and perform initialization
+        of the sample table.
+        """
+        with open(path + '_vocab.pickle', 'rb') as f:
+            self.count = pickle.load(f)
+            self.vocab_words = {vocab_word[0]: idx for idx, vocab_word in enumerate(self.count)}
 
     def save_vocab(self, path):
         """Save vocabulary (before subsampling and initializing of
         the sample table). The model path has to be provided
         without extension.
         """
-        with open(path + '_vocab.txt', "w") as f:
-            for i in xrange(len(self.count)):
-                vocab_word = self.vocab_words[i]
-                f.write("%s %d\n" % (vocab_word, self.count[i][1])) 
+        with open(path + '_vocab.pickle', "wb") as f:
+            pickle.dump(self.count, f)
+            # for vocab_word, idx in self.vocab_words.items():
+            #     f.write("%s %d\n" % (vocab_word, self.count[idx][1])) 
 
     def init_sample_table(self, table_size=1e6):
         count = [ele[1] for ele in self.count]
