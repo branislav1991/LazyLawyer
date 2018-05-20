@@ -6,7 +6,6 @@ import os
 
 print('Loading documents...')
 docs = table_docs.get_docs_with_name('Judgment')
-docs = docs[:5]
 
 content_generator = (table_doc_contents.get_doc_content(doc) for doc in docs)
 sentences = CURIAContentProcessor(content_generator)
