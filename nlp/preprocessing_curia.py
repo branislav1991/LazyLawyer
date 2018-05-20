@@ -59,7 +59,7 @@ class CURIAContentProcessor():
         self.buffered_sents.extend(tokens)
 
     def __next__(self):
-        if len(self.buffered_sents) < 1:
+        while len(self.buffered_sents) < 1:
             content = next(self.content_generator)
             self.preprocess_and_buffer(content)
 
