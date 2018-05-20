@@ -59,7 +59,7 @@ class Word2VecDataset():
         in dictionary.
         """
         idx = self.vocab_words.get(word)
-        return -1 if idx is None else idx
+        return 0 if idx is None else idx
 
     def load_vocab(self, path):
         """Load vocabulary and perform initialization

@@ -24,8 +24,8 @@ class CURIAContentProcessor():
         content = re.split(r"(?i)gives the following[\S\s]*?judgment", content)
         if len(content) < 2:
             warnings.warn('Not the correct format for judgments')
-        
-        content = ''.join(content[1:])
+        else:
+            content = ''.join(content[1:])
 
         content = re.sub(r'[^A-Za-z0-9\s.\/-]',r'',content)
         content = re.sub(r'\n',r' ',content)

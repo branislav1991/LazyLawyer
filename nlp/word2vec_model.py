@@ -84,6 +84,7 @@ class Word2Vec:
         """Initialize vocabulary from sentences and save it
         to the supplied path.
         """
+        print('Initializing vocabulary...')
         self.dataset.initialize_vocab(sentences)
         self.dataset.save_vocab(self.path)
 
@@ -91,12 +92,15 @@ class Word2Vec:
         """Loads the last model weights and the
         vocabulary that was built.
         """
+        print('Loading vocabulary...')
         self.dataset.load_vocab(self.path)
 
         folder, _ = os.path.split(self.path)
         paths = os.listdir(folder)
         paths = [x for x in paths if x.startswith('word2vec_model_epoch')]
-        torch.load(os.path.join(folder, paths[-1]))
+        model_save = torch.load(os.path.join(folder, paths[-1]))
+        self.model.load_state_dict(model_save)
+        pass
 
     def word_similarity(self, word1, word2):
         emb1 = self.model.idx2emb(self.dataset.get_index(word1)).data.numpy()
