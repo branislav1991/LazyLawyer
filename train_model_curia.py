@@ -6,11 +6,11 @@ from nlp.preprocessing_curia import CURIAContentProcessor
 
 print('Loading documents...')
 docs = table_docs.get_docs_with_name('Judgment')
+docs = docs[:5]
 
 content_generator = (table_doc_contents.get_doc_content(doc) for doc in docs)
-tokens = CURIAContentProcessor(content_generator)
+sentences = CURIAContentProcessor(content_generator)
 
-print('Beginning training...')
-path = os.path.join('nlp', helpers.setup_json['model_path'])
-model_trainer.train_model(tokens, path)
-print('Finished!')
+helpers.create_folder_if_not_exists('trained_models')
+path = os.path.join('trained_models', helpers.setup_json['model_path'])
+model_trainer.train_model(sentences, path)

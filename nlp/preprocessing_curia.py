@@ -1,4 +1,5 @@
 import helpers
+from nlp.helpers import combine_split_result
 import re
 
 class CURIAContentProcessor():
@@ -18,8 +19,6 @@ class CURIAContentProcessor():
         adds the preprocessed tokenized sentences to the
         buffered_sents list.
         """
-        print('Preprocessing document...')
-
         # remove header
         content = re.split(r"(?i)gives the following[\S\s]*?judgment", content)
         if len(content) < 2:
@@ -38,19 +37,23 @@ class CURIAContentProcessor():
 
         # remove numbers (preliminary only; of course Article numbers are important)
         tokens = [[word for word in sent if not word[0].isdigit()] for sent in tokens] 
+
         # simple word splitting: split words that begin with capitals
         tokens_split = []
         for sent in tokens:
             sent_split = []
             for word in sent:
-                sent_split.extend(re.split(r"(?<=[a-z])[A-Z]", word))
+                # TODO: add splitting exceptions
+                s = re.split(r"((?<=[a-z])[A-Z])", word)
+                s = combine_split_result(s)
+                sent_split.extend(s)
             tokens_split.append(sent_split)
         tokens = tokens_split
 
         tokens = [sent for sent in tokens if len(sent) > 1] # only deal with longer sentences
 
         tokens = [[word.lower() for word in sent] for sent in tokens] # lowercase words
-        tokens = [[word for word in sent if word not in self.stopwords] for sent in tokens] # remove stopwords
+        #tokens = [[word for word in sent if word not in self.stopwords] for sent in tokens] # remove stopwords
         self.buffered_sents.extend(tokens)
 
     def __next__(self):
