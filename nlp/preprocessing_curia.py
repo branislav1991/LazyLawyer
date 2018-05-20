@@ -1,6 +1,7 @@
 import helpers
 from nlp.helpers import combine_split_result
 import re
+import warnings
 
 class CURIAContentProcessor():
     """This class processes content one-by-one by applying
@@ -22,7 +23,7 @@ class CURIAContentProcessor():
         # remove header
         content = re.split(r"(?i)gives the following[\S\s]*?judgment", content)
         if len(content) < 2:
-            raise ValueError('Not the correct format for judgments')
+            warnings.warn('Not the correct format for judgments')
         
         content = ''.join(content[1:])
 
