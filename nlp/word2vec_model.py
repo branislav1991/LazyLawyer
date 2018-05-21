@@ -61,7 +61,7 @@ class Skipgram(nn.Module):
             fo.write(word+' '+embed+'\n')
 
 class Word2Vec:
-    def __init__(self, vocabulary_size=100000, embedding_dim=200, epoch_num=10, batch_size=16, windows_size=5,neg_sample_num=10):
+    def __init__(self, vocabulary_size=20000, embedding_dim=200, epoch_num=10, batch_size=16, windows_size=5,neg_sample_num=10):
         """Initializes the model by building a vocabulary of most frequent words
         and performing subsamling according to the frequency distribution proposed
         in the word2vec paper.
