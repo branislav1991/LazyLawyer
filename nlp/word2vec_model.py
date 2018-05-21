@@ -79,16 +79,20 @@ class Word2Vec:
         if torch.cuda.is_available() and torch.cuda.get_device_capability(0)[0] > 4:
             self.model.cuda()
 
-    def init_and_save_vocab(self, sentences, save_path):
-        """Initialize vocabulary from sentences and save it
-        to the supplied path.
+    def init_and_save_vocab(self, sentence_gen, save_path):
+        """Initialize vocabulary from 'sentence_gen' and
+        (optionally) 'document_gen' for tf-idf weights and 
+        save it to the supplied path.
         """
         print('Initializing vocabulary...')
-        self.dataset.initialize_vocab(sentences)
-        self.dataset.save_vocab(save_path)
+        self.dataset.initialize_and_save_vocab(sentence_gen, save_path)
+
+    def init_and_save_idf(self, document_gen, save_path):
+        print('Initializing tf-idf weights...')
+        self.dataset.initialize_and_save_idf(document_gen, save_path)
 
     def load(self, path):
-        """Loads the last model weights and the
+        """Loads the last model weights and th
         vocabulary that was built.
         """
         print('Loading vocabulary...')
@@ -112,7 +116,7 @@ class Word2Vec:
 
         return cosine_similarity(emb1, emb2)
 
-    def doc_similarity(self, sent1, sent2, strategy='average'):
+    def doc_similarity(self, doc1, doc2, strategy='average'):
         """Compares docs by either calculating an average
         of word vectors in a document or, alternatively,
         weighting the average by tf-idf.
@@ -132,8 +136,14 @@ class Word2Vec:
                 vecs = [self.get_embedding(w) for w in sentence]
                 emb2.extend(vecs)
 
-        else:
-            pass
+        else: # tf-idf
+            for sentence in sent1:
+                vecs = [self.get_embedding(w) for w in sentence]
+                emb1.extend(vecs)
+
+            for sentence in sent2:
+                vecs = [self.get_embedding(w) for w in sentence]
+                emb2.extend(vecs)
 
         emb1 = np.mean(emb1, axis=0)
         emb2 = np.mean(emb2, axis=0)

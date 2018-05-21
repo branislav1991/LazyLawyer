@@ -1,7 +1,7 @@
 from database import table_docs, table_doc_contents
 import helpers
 from nlp.word2vec_model import Word2Vec
-from nlp.preprocessing_curia import CURIAContentProcessor
+from nlp.curia_sentence_processor import CURIASentenceProcessor
 import os
 
 save_path = os.path.join('trained_models', helpers.setup_json['model_path'])

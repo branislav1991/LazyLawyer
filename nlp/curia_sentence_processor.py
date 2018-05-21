@@ -3,9 +3,10 @@ from nlp.helpers import combine_split_result
 import re
 import warnings
 
-class CURIAContentProcessor():
-    """This class processes content one-by-one by applying
-    various preprocessing steps such as tokenization etc.
+class CURIASentenceProcessor():
+    """This class processes content one-by-one into lists of tokens
+    by SENTENCES by applying various preprocessing steps 
+    such as tokenization etc.
     It requires either a content generator or a list of
     documents as input.
     """
