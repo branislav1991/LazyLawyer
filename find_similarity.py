@@ -1,12 +1,21 @@
 from database import table_docs, table_doc_contents
 import helpers
 from nlp.word2vec_model import Word2Vec
+from nlp.preprocessing_curia import CURIAContentProcessor
 import os
 
 save_path = os.path.join('trained_models', helpers.setup_json['model_path'])
-model = Word2Vec(save_path)
-model.load()
+model = Word2Vec()
+model.load(save_path)
 
-sim1 = model.word_similarity('judgment', 'ec')
-sim2 = model.word_similarity('judgment', 'court')
-print('Similarity 1: {0}, Similarity 2: {1}'.format(sim1, sim2))
+
+docs = table_docs.get_docs_with_name('Judgment')
+doc1 = table_doc_contents.get_doc_content(docs[10])
+doc2 = table_doc_contents.get_doc_content(docs[1000])
+
+sentences1 = CURIAContentProcessor([doc1])
+sentences2 = CURIAContentProcessor([doc2])
+
+sim = model.doc_similarity(sentences1, sentences2)
+
+print('Similarity: {0}'.format(sim))

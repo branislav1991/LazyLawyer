@@ -6,10 +6,15 @@ import warnings
 class CURIAContentProcessor():
     """This class processes content one-by-one by applying
     various preprocessing steps such as tokenization etc.
-    It requires a content generator as input.
+    It requires either a content generator or a list of
+    documents as input.
     """
     def __init__(self, content_generator):
-        self.content_generator = content_generator
+        if isinstance(content_generator, list): # if we supplied a list, make it an iterator
+            self.content_generator = iter(content_generator)
+        else:
+            self.content_generator = content_generator
+
         self.buffered_sents = [] # buffer for processed sentences
 
         with open(helpers.setup_json['stopwords_path'], 'r') as stopwords:

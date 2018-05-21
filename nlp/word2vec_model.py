@@ -61,13 +61,12 @@ class Skipgram(nn.Module):
             fo.write(word+' '+embed+'\n')
 
 class Word2Vec:
-    def __init__(self, path, vocabulary_size=100000, embedding_dim=200, epoch_num=10, batch_size=16, windows_size=5,neg_sample_num=10):
+    def __init__(self, vocabulary_size=100000, embedding_dim=200, epoch_num=10, batch_size=16, windows_size=5,neg_sample_num=10):
         """Initializes the model by building a vocabulary of most frequent words
         and performing subsamling according to the frequency distribution proposed
         in the word2vec paper.
         """
         print('Initializing Word2Vec...')
-        self.path = path
         self.embedding_dim = embedding_dim
         self.vocabulary_size = vocabulary_size
         self.batch_size = batch_size
@@ -80,38 +79,68 @@ class Word2Vec:
         if torch.cuda.is_available() and torch.cuda.get_device_capability(0)[0] > 4:
             self.model.cuda()
 
-    def init_and_save_vocab(self, sentences):
+    def init_and_save_vocab(self, sentences, save_path):
         """Initialize vocabulary from sentences and save it
         to the supplied path.
         """
         print('Initializing vocabulary...')
         self.dataset.initialize_vocab(sentences)
-        self.dataset.save_vocab(self.path)
+        self.dataset.save_vocab(save_path)
 
-    def load(self):
+    def load(self, path):
         """Loads the last model weights and the
         vocabulary that was built.
         """
         print('Loading vocabulary...')
-        self.dataset.load_vocab(self.path)
+        self.dataset.load_vocab(path)
 
-        folder, _ = os.path.split(self.path)
+        folder, _ = os.path.split(path)
         paths = os.listdir(folder)
         paths = [x for x in paths if x.startswith('word2vec_model_epoch')]
         model_save = torch.load(os.path.join(folder, paths[-1]))
         self.model.load_state_dict(model_save)
-        pass
+    
+    def get_embedding(self, word):
+        """Return embedding vector for a particular word.
+        """
+        emb = self.model.idx2emb(self.dataset.get_index(word)).data.numpy()
+        return emb
 
     def word_similarity(self, word1, word2):
-        emb1 = self.model.idx2emb(self.dataset.get_index(word1)).data.numpy()
-        emb2 = self.model.idx2emb(self.dataset.get_index(word2)).data.numpy()
+        emb1 = self.get_embedding(word1)
+        emb2 = self.get_embedding(word2)
 
         return cosine_similarity(emb1, emb2)
 
-    def doc_similarity(self, doc1, doc2):
-        pass
+    def doc_similarity(self, sent1, sent2, strategy='average'):
+        """Compares docs by either calculating an average
+        of word vectors in a document or, alternatively,
+        weighting the average by tf-idf.
+        """
+        strategies = ['average', 'tf-idf']
+        if strategy not in strategies:
+            raise ValueError('Strategy has to be either "average" or "tf-idf"')
 
-    def train(self):
+        emb1 = []
+        emb2 = []
+        if strategy == 'average':
+            for sentence in sent1:
+                vecs = [self.get_embedding(w) for w in sentence]
+                emb1.extend(vecs)
+
+            for sentence in sent2:
+                vecs = [self.get_embedding(w) for w in sentence]
+                emb2.extend(vecs)
+
+        else:
+            pass
+
+        emb1 = np.mean(emb1, axis=0)
+        emb2 = np.mean(emb2, axis=0)
+
+        return cosine_similarity(emb1, emb2)
+
+    def train(self, model_save_path):
         print('Starting training...')
 
         optimizer = optim.SGD(self.model.parameters(),lr=0.2)
@@ -139,7 +168,7 @@ class Word2Vec:
                 optimizer.step()
 
                 if batch_num%30000 == 0:
-                    torch.save(self.model.state_dict(), self.path + '_epoch{}.batch{}.pickle'.format(epoch,batch_num))
+                    torch.save(self.model.state_dict(), model_save_path + '_epoch{}.batch{}.pickle'.format(epoch,batch_num))
 
                 batch_num = batch_num + 1 
         print("Training Finished!")
