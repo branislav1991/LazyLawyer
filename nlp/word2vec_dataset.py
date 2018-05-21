@@ -82,7 +82,7 @@ class Word2VecDataset():
                 if i > 0 and entry[0] in doc: # skip unknown token
                     doc_freq[i][1] = doc_freq[i][1] + 1
 
-        self.idf = [[e[0], math.log(num_docs / (e[1]+1))] for e in doc_freq]
+        self.idf = [[e[0], math.log((num_docs+1) / (e[1]+1))] for e in doc_freq]
         self.idf[0][1] = 1.0 # unknown token has document frequency of 1 (arbitrary) 
 
         with open(path + '_idf.pickle', "wb") as f:
