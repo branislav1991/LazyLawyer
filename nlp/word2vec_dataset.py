@@ -82,8 +82,8 @@ class Word2VecDataset():
                 if i > 0 and entry[0] in doc: # skip unknown token
                     doc_freq[i][1] = doc_freq[i][1] + 1
 
-        self.idf = [[e[0], math.log((num_docs+1) / (e[1]+1))] for e in doc_freq]
-        self.idf[0][1] = 1.0 # unknown token has document frequency of 1 (arbitrary) 
+        self.idf = {e[0]: math.log((num_docs+1) / (e[1]+1)) for e in doc_freq}
+        self.idf['UNK'] = 0.0 # unknown token has idf of 0
 
         with open(path + '_idf.pickle', "wb") as f:
             pickle.dump(self.idf, f)
@@ -102,6 +102,19 @@ class Word2VecDataset():
         with open(path + '_vocab.pickle', 'rb') as f:
             self.count = pickle.load(f)
             self.vocab_words = {vocab_word[0]: idx for idx, vocab_word in enumerate(self.count)}
+
+    def get_tfidf_weights(self, docs):
+        """Get term frequency of a word in an 
+        iterator of documents.
+        """
+        tf = {c[0]: 0 for c in self.count}
+        for doc in docs:
+            for word in doc:
+                if word in self.vocab_words:
+                    tf[word] = tf[word] + 1
+
+        tfidf = {word: tf[word] * self.idf[word] for word in tf.keys() & self.idf.keys()}
+        return tfidf
 
     def init_sample_table(self, table_size=1e6):
         count = [ele[1] for ele in self.count]

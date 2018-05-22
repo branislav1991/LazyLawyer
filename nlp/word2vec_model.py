@@ -97,6 +97,7 @@ class Word2Vec:
         """
         print('Loading vocabulary...')
         self.dataset.load_vocab(path)
+        self.dataset.load_idf(path)
 
         folder, _ = os.path.split(path)
         paths = os.listdir(folder)
@@ -119,31 +120,27 @@ class Word2Vec:
     def doc_similarity(self, doc1, doc2, strategy='average'):
         """Compares docs by either calculating an average
         of word vectors in a document or, alternatively,
-        weighting the average by tf-idf.
+        weighting the average by tf-idf. Words should be
+        organized in documents and not in sentences.
         """
         strategies = ['average', 'tf-idf']
         if strategy not in strategies:
             raise ValueError('Strategy has to be either "average" or "tf-idf"')
 
-        emb1 = []
-        emb2 = []
         if strategy == 'average':
-            for sentence in sent1:
-                vecs = [self.get_embedding(w) for w in sentence]
-                emb1.extend(vecs)
-
-            for sentence in sent2:
-                vecs = [self.get_embedding(w) for w in sentence]
-                emb2.extend(vecs)
+            emb1 = [self.get_embedding(w) for w in next(doc1)]
+            emb2 = [self.get_embedding(w) for w in next(doc2)]
 
         else: # tf-idf
-            for sentence in sent1:
-                vecs = [self.get_embedding(w) for w in sentence]
-                emb1.extend(vecs)
+            doc1 = list(doc1)
+            tf1 = self.dataset.get_tfidf_weights(doc1)
+            words = [w if tf1.get(w) else 'UNK' for w in doc1[0]] # replace unknown words by UNK token
+            emb1 = [tf1[w] * self.get_embedding(w) for w in words]
 
-            for sentence in sent2:
-                vecs = [self.get_embedding(w) for w in sentence]
-                emb2.extend(vecs)
+            doc2 = list(doc2)
+            tf2 = self.dataset.get_tfidf_weights(doc2)
+            words = [w if tf2.get(w) else 'UNK' for w in doc2[0]] # replace unknown words by UNK token
+            emb2 = [tf2[w] * self.get_embedding(w) for w in words]
 
         emb1 = np.mean(emb1, axis=0)
         emb2 = np.mean(emb2, axis=0)
