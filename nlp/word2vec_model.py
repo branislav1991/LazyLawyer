@@ -79,20 +79,19 @@ class Word2Vec:
         if torch.cuda.is_available() and torch.cuda.get_device_capability(0)[0] > 4:
             self.model.cuda()
 
-    def init_and_save_vocab(self, sentence_gen, save_path):
-        """Initialize vocabulary from 'sentence_gen' and
-        (optionally) 'document_gen' for tf-idf weights and 
+    def init_and_save_vocab(self, document_gen, save_path):
+        """Initialize vocabulary from 'document_gen' and
         save it to the supplied path.
         """
         print('Initializing vocabulary...')
-        self.dataset.initialize_and_save_vocab(sentence_gen, save_path)
+        self.dataset.initialize_and_save_vocab(document_gen, save_path)
 
     def init_and_save_idf(self, document_gen, save_path):
         print('Initializing tf-idf weights...')
         self.dataset.initialize_and_save_idf(document_gen, save_path)
 
     def load(self, path):
-        """Loads the last model weights and th
+        """Loads the last model weights and the
         vocabulary that was built.
         """
         print('Loading vocabulary...')
