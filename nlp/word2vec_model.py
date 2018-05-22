@@ -1,6 +1,7 @@
 import collections
 from nlp.helpers import cosine_similarity
-from nlp.word2vec_dataset import Word2VecDataset
+from nlp.word2vec_vocabulary import Word2VecVocabulary
+from nlp.word2vec_training_dataset import Word2VecTrainingDataset
 import numpy as np
 import os
 
@@ -61,7 +62,7 @@ class Skipgram(nn.Module):
             fo.write(word+' '+embed+'\n')
 
 class Word2Vec:
-    def __init__(self, vocabulary_size=20000, embedding_dim=200, epoch_num=10, batch_size=16, windows_size=5,neg_sample_num=10):
+    def __init__(self, vocabulary_size=20000, embedding_dim=200, epoch_num=10, batch_size=16, window_size=5,neg_sample_num=10):
         """Initializes the model by building a vocabulary of most frequent words
         and performing subsamling according to the frequency distribution proposed
         in the word2vec paper.
@@ -71,9 +72,11 @@ class Word2Vec:
         self.vocabulary_size = vocabulary_size
         self.batch_size = batch_size
         self.epoch_num = epoch_num
+        self.window_size = window_size
+        self.neg_sample_num = neg_sample_num
 
         # initialize dataset and model 
-        self.dataset = Word2VecDataset(vocabulary_size, windows_size, batch_size, neg_sample_num)
+        self.vocab = Word2VecVocabulary(vocabulary_size)
         self.model = Skipgram(vocabulary_size, embedding_dim)
 
         if torch.cuda.is_available() and torch.cuda.get_device_capability(0)[0] > 4:
@@ -84,19 +87,19 @@ class Word2Vec:
         save it to the supplied path.
         """
         print('Initializing vocabulary...')
-        self.dataset.initialize_and_save_vocab(document_gen, save_path)
+        self.vocab.initialize_and_save_vocab(document_gen, save_path)
 
     def init_and_save_idf(self, document_gen, save_path):
         print('Initializing tf-idf weights...')
-        self.dataset.initialize_and_save_idf(document_gen, save_path)
+        self.vocab.initialize_and_save_idf(document_gen, save_path)
 
     def load(self, path):
         """Loads the last model weights and the
         vocabulary that was built.
         """
         print('Loading vocabulary...')
-        self.dataset.load_vocab(path)
-        self.dataset.load_idf(path)
+        self.vocab.load_vocab(path)
+        self.vocab.load_idf(path)
 
         folder, _ = os.path.split(path)
         paths = os.listdir(folder)
@@ -107,7 +110,7 @@ class Word2Vec:
     def get_embedding(self, word):
         """Return embedding vector for a particular word.
         """
-        emb = self.model.idx2emb(self.dataset.get_index(word)).data.numpy()
+        emb = self.model.idx2emb(self.vocab.get_index(word)).data.numpy()
         return emb
 
     def word_similarity(self, word1, word2):
@@ -120,25 +123,24 @@ class Word2Vec:
         """Compares docs by either calculating an average
         of word vectors in a document or, alternatively,
         weighting the average by tf-idf. Words should be
-        organized in documents and not in sentences.
+        organized in documents and not in sentences. This
+        function works with lists of words instead of iterators.
         """
         strategies = ['average', 'tf-idf']
         if strategy not in strategies:
             raise ValueError('Strategy has to be either "average" or "tf-idf"')
 
         if strategy == 'average':
-            emb1 = [self.get_embedding(w) for w in next(doc1)]
-            emb2 = [self.get_embedding(w) for w in next(doc2)]
+            emb1 = [self.get_embedding(w) for w in doc1]
+            emb2 = [self.get_embedding(w) for w in doc2]
 
         else: # tf-idf
-            doc1 = list(doc1)
-            tf1 = self.dataset.get_tfidf_weights(doc1)
-            words = [w if tf1.get(w) else 'UNK' for w in doc1[0]] # replace unknown words by UNK token
+            tf1 = self.vocab.get_tfidf_weights(doc1)
+            words = [w if tf1.get(w) else 'UNK' for w in doc1] # replace unknown words by UNK token
             emb1 = [tf1[w] * self.get_embedding(w) for w in words]
 
-            doc2 = list(doc2)
-            tf2 = self.dataset.get_tfidf_weights(doc2)
-            words = [w if tf2.get(w) else 'UNK' for w in doc2[0]] # replace unknown words by UNK token
+            tf2 = self.vocab.get_tfidf_weights(doc2)
+            words = [w if tf2.get(w) else 'UNK' for w in doc2] # replace unknown words by UNK token
             emb2 = [tf2[w] * self.get_embedding(w) for w in words]
 
         emb1 = np.mean(emb1, axis=0)
@@ -146,15 +148,17 @@ class Word2Vec:
 
         return cosine_similarity(emb1, emb2)
 
-    def train(self, model_save_path):
+    def train(self, document_gen, model_save_path):
         print('Starting training...')
+        dataset = Word2VecTrainingDataset(document_gen, self.vocab.get_vocabulary(), 
+            self.vocab.get_count(), self.window_size, self.batch_size, self.neg_sample_num)
 
         optimizer = optim.SGD(self.model.parameters(),lr=0.2)
         for epoch in range(self.epoch_num):
             batch_num = 0
-            self.dataset.reset()
+            dataset.reset()
 
-            for pos_u, pos_v, neg_v in self.dataset:
+            for pos_u, pos_v, neg_v in dataset:
                 pos_u = Variable(torch.LongTensor(pos_u))
                 pos_v = Variable(torch.LongTensor(pos_v))
                 neg_v = Variable(torch.LongTensor(neg_v))

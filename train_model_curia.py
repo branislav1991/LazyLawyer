@@ -18,4 +18,6 @@ model.init_and_save_vocab(document_gen, save_path)
 
 document_gen = (process_into_words(table_doc_contents.get_doc_content(doc)) for doc in docs)
 model.init_and_save_idf(document_gen, save_path)
-model.train(save_path) # train and save embedding matrices
+
+document_gen = (process_into_words(table_doc_contents.get_doc_content(doc)) for doc in docs)
+model.train(document_gen, save_path)
