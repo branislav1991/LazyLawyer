@@ -79,6 +79,7 @@ class Word2VecVocabulary():
         for word in doc:
             if word in tf:
                 tf[word] = tf[word] + 1
+        tf = {key: value / len(doc) for key, value in tf.items()}
 
         tfidf = {word: tf[word] * self.idf[word] for word in tf.keys() & self.idf.keys()}
         return tfidf
