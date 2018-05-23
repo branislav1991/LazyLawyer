@@ -7,7 +7,7 @@ class Word2VecTrainingDataset():
     """This class represents the training dataset used to feed pytorch with
     training data.
     """
-    def __init__(self, sentence_gen, vocab, count, window_size, batch_size, neg_sample_num):
+    def __init__(self, document_gen, vocab, count, window_size, batch_size, neg_sample_num):
         self.window_size = window_size
         self.batch_size = batch_size
         self.neg_sample_num = neg_sample_num
@@ -17,10 +17,10 @@ class Word2VecTrainingDataset():
         self.sample_table = self.init_sample_table()
 
         self.data_index = 0 # iteration index
-        self.train_data = self.initialize_training_data(sentence_gen)
+        self.train_data = self.initialize_training_data(document_gen)
 
-    def initialize_training_data(self, sentence_gen):
-        words = list(chain.from_iterable(sentence_gen))
+    def initialize_training_data(self, document_gen):
+        words = list(chain.from_iterable(document_gen))
         indexed_words = []
         for word in words:
             if word in self.vocab:
