@@ -20,7 +20,7 @@ class Word2VecTrainingDataset():
         self.train_data = self.initialize_training_data(document_gen)
 
     def initialize_training_data(self, document_gen):
-        words = list(chain.from_iterable(document_gen))
+        words = chain.from_iterable(document_gen)
         indexed_words = []
         for word in words:
             if word in self.vocab:

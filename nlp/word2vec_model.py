@@ -86,18 +86,15 @@ class Word2Vec:
         """Initialize vocabulary from 'document_gen' and
         save it to the supplied path.
         """
-        print('Initializing vocabulary...')
         self.vocab.initialize_and_save_vocab(document_gen, save_path)
 
     def init_and_save_idf(self, document_gen, save_path):
-        print('Initializing tf-idf weights...')
         self.vocab.initialize_and_save_idf(document_gen, save_path)
 
     def load(self, path):
         """Loads the last model weights and the
         vocabulary that was built.
         """
-        print('Loading vocabulary...')
         self.vocab.load_vocab(path)
         self.vocab.load_idf(path)
 
@@ -149,7 +146,6 @@ class Word2Vec:
         return cosine_similarity(emb1, emb2)
 
     def train(self, document_gen, model_save_path):
-        print('Starting training...')
         dataset = Word2VecTrainingDataset(document_gen, self.vocab.get_vocabulary(), 
             self.vocab.get_count(), self.window_size, self.batch_size, self.neg_sample_num)
 
