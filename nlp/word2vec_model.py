@@ -1,6 +1,5 @@
 import collections
 from nlp.helpers import cosine_similarity
-from nlp.word2vec_vocabulary import Word2VecVocabulary
 from nlp.word2vec_training_dataset import Word2VecTrainingDataset
 import numpy as np
 import os
@@ -62,42 +61,29 @@ class Skipgram(nn.Module):
             fo.write(word+' '+embed+'\n')
 
 class Word2Vec:
-    def __init__(self, vocabulary_size=20000, embedding_dim=200, epoch_num=10, batch_size=16, window_size=5,neg_sample_num=10):
+    def __init__(self, vocabulary, embedding_dim=200, epoch_num=10, batch_size=16, window_size=5,neg_sample_num=10):
         """Initializes the model by building a vocabulary of most frequent words
         and performing subsamling according to the frequency distribution proposed
         in the word2vec paper.
         """
         print('Initializing Word2Vec...')
+        self.vocab = vocabulary
         self.embedding_dim = embedding_dim
-        self.vocabulary_size = vocabulary_size
         self.batch_size = batch_size
         self.epoch_num = epoch_num
         self.window_size = window_size
         self.neg_sample_num = neg_sample_num
 
         # initialize dataset and model 
-        self.vocab = Word2VecVocabulary(vocabulary_size)
-        self.model = Skipgram(vocabulary_size, embedding_dim)
+        self.model = Skipgram(self.vocab.vocabulary_size, embedding_dim)
 
         if torch.cuda.is_available() and torch.cuda.get_device_capability(0)[0] > 4:
             self.model.cuda()
-
-    def init_and_save_vocab(self, document_gen, save_path):
-        """Initialize vocabulary from 'document_gen' and
-        save it to the supplied path.
-        """
-        self.vocab.initialize_and_save_vocab(document_gen, save_path)
-
-    def init_and_save_idf(self, document_gen, save_path):
-        self.vocab.initialize_and_save_idf(document_gen, save_path)
 
     def load(self, path):
         """Loads the last model weights and the
         vocabulary that was built.
         """
-        self.vocab.load_vocab(path)
-        self.vocab.load_idf(path)
-
         folder, _ = os.path.split(path)
         paths = os.listdir(folder)
         paths = [x for x in paths if x.startswith('word2vec_model_epoch')]
