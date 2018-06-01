@@ -1,4 +1,5 @@
 import collections
+from itertools import chain
 from nlp.helpers import cosine_similarity
 from nlp.word2vec_training_dataset import Word2VecTrainingDataset
 import numpy as np
@@ -61,7 +62,7 @@ class Skipgram(nn.Module):
             fo.write(word+' '+embed+'\n')
 
 class Word2Vec:
-    def __init__(self, vocabulary, embedding_dim=200, epoch_num=10, batch_size=16, window_size=5,neg_sample_num=10):
+    def __init__(self, vocabulary, embedding_dim=200, epoch_num=10, batch_size=16, window_size=2,neg_sample_num=10):
         """Initializes the model by building a vocabulary of most frequent words
         and performing subsamling according to the frequency distribution proposed
         in the word2vec paper.
@@ -113,6 +114,9 @@ class Word2Vec:
         if strategy not in strategies:
             raise ValueError('Strategy has to be either "average" or "tf-idf"')
 
+        doc1 = list(chain.from_iterable(doc1))
+        doc2 = list(chain.from_iterable(doc2))
+
         if strategy == 'average':
             emb1 = [self.get_embedding(w) for w in doc1]
             emb2 = [self.get_embedding(w) for w in doc2]
@@ -131,14 +135,13 @@ class Word2Vec:
 
         return cosine_similarity(emb1, emb2)
 
-    def train(self, document_gen, model_save_path):
-        dataset = Word2VecTrainingDataset(document_gen, self.vocab.get_vocabulary(), 
+    def train(self, documents, model_save_path):
+        dataset = Word2VecTrainingDataset(documents, self.vocab.get_vocabulary(), 
             self.vocab.get_count(), self.window_size, self.batch_size, self.neg_sample_num)
 
         optimizer = optim.SGD(self.model.parameters(),lr=0.2)
         for epoch in range(self.epoch_num):
             batch_num = 0
-            dataset.reset()
 
             for pos_u, pos_v, neg_v in dataset:
                 pos_u = Variable(torch.LongTensor(pos_u))

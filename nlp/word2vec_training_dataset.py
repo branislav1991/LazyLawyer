@@ -7,7 +7,7 @@ class Word2VecTrainingDataset():
     """This class represents the training dataset used to feed pytorch with
     training data.
     """
-    def __init__(self, document_gen, vocab, count, window_size, batch_size, neg_sample_num):
+    def __init__(self, documents, vocab, count, window_size, batch_size, neg_sample_num):
         self.window_size = window_size
         self.batch_size = batch_size
         self.neg_sample_num = neg_sample_num
@@ -16,21 +16,36 @@ class Word2VecTrainingDataset():
         self.count = count
         self.sample_table = self.init_sample_table()
 
-        self.data_index = 0 # iteration index
-        self.train_data = self.initialize_training_data(document_gen)
+        self.train_data = self.initialize_training_data(documents)
+        self.train_data = [sent for sent in self.train_data if len(sent) > 1] # only longer sentences are relevant
+        self.train_data = [self.pad(sent, 2*window_size + 1) for sent in self.train_data] # pad short sentences
 
-    def initialize_training_data(self, document_gen):
-        words = chain.from_iterable(document_gen)
-        indexed_words = []
-        for word in words:
-            if word in self.vocab:
-                index = self.vocab[word]
-            else:
-                index = 0  # dictionary['UNK']
-                unk_count += 1
-            indexed_words.append(index)
+        self.train_iterator = None
+        self.current_sentence = None
+        self.sentence_index = 0
 
-        train_data = self.subsampling(indexed_words)
+    def pad(self, sentence, length):
+        if len(sentence) < length:
+            pad_length = length - len(sentence)
+            pad_begin = [0] * (pad_length // 2)
+            pad_end = [0] * (pad_length - len(pad_begin))
+            sentence = pad_begin + sentence + pad_end
+        return sentence
+
+    def initialize_training_data(self, documents):
+        sentences = chain.from_iterable(documents)
+        indexed_sentences = []
+        for sentence in sentences:
+            indexed_words = []
+            for word in sentence:
+                if word in self.vocab:
+                    index = self.vocab[word]
+                else:
+                    index = 0  # dictionary['UNK']
+                indexed_words.append(index)
+            indexed_sentences.append(indexed_words)
+
+        train_data = self.subsampling(indexed_sentences)
         return train_data
 
     def init_sample_table(self, table_size=1e6):
@@ -48,7 +63,7 @@ class Word2VecTrainingDataset():
             sample_table += [idx] * int(x)
         return np.array(sample_table)
 
-    def subsampling(self, data, threshold=1e-5):
+    def subsampling(self, sentences, threshold=1e-5):
         """Perform subsampling according to the word
         count and the frequency probability described
         in the original paper.
@@ -58,45 +73,47 @@ class Word2VecTrainingDataset():
         # calculate probability of removal
         P = {idx: ((f-threshold)/f) - math.sqrt(threshold/f) for idx, f in enumerate(frequency)}
 
-        subsampled_data = list()
-        for word in data:
-            if random.random() > P[word]:
-                subsampled_data.append(word)
-        return subsampled_data
-
-    def reset(self):
-        self.data_index = 0
+        subsampled_sentences = []
+        for sentence in sentences:
+            subsampled_sentence = []
+            for word in sentence:
+                if random.random() > P[word]:
+                    subsampled_sentence.append(word)
+            subsampled_sentences.append(subsampled_sentence)
+        return subsampled_sentences
 
     def __iter__(self):
+        """Resets all iterations and starts a new iteration
+        through the dataset.
+        """
+        self.train_iterator = iter(self.train_data)
+        self.current_sentence = next(self.train_iterator)
+        self.sentence_index = 0
         return self
 
     def __next__(self):
-        data = self.train_data
         span = 2 * self.window_size + 1
         context = np.ndarray(shape=(self.batch_size,2 * self.window_size), dtype=np.int64)
         labels = np.ndarray(shape=(self.batch_size), dtype=np.int64)
-        pos_pair = []
 
-        if self.data_index + span > len(data):
-            raise StopIteration()
-
-        buffer = data[self.data_index:self.data_index + span]
         pos_u = []
         pos_v = []
 
         for i in range(self.batch_size):
-            self.data_index += 1
+            # if we ran out of words, just fetch next sentence
+            if (self.sentence_index + span) > len(self.current_sentence):
+                self.current_sentence = next(self.train_iterator)
+                self.sentence_index = 0
+
+            buffer = self.current_sentence[self.sentence_index:self.sentence_index + span]
             context[i,:] = buffer[:self.window_size]+buffer[self.window_size+1:]
             labels[i] = buffer[self.window_size]
-            if self.data_index + span > len(data):
-                temp_index = self.data_index + span - 1 - len(data)
-                buffer[:] = data[temp_index:temp_index + span]
-
-            else:
-                buffer = data[self.data_index:self.data_index + span]
 
             for j in range(span-1):
                 pos_u.append(labels[i])
                 pos_v.append(context[i,j])
+
+            self.sentence_index += 1
+
         neg_v = np.random.choice(self.sample_table, size=(self.batch_size*2*self.window_size, self.neg_sample_num))
         return np.array(pos_u), np.array(pos_v), neg_v
