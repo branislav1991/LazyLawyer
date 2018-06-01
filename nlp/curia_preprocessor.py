@@ -3,6 +3,9 @@ from nlp.helpers import combine_split_result
 from itertools import chain
 import re
 import warnings
+import Stemmer
+
+stemmer = Stemmer.Stemmer('english')
 
 def remove_header(doc):
     content = re.split(r"(?i)gives the following[\S\s]*?judgment", doc)
@@ -38,3 +41,17 @@ def tokenize(sentence):
     tokens = [word.lower() for word in tokens] # lowercase words
     #tokens = [word for word in tokens if word not in self.stopwords] # remove stopwords
     return tokens
+
+def preprocess(doc_content):
+    """Perform all necessary steps to process doc_content from raw string to a
+    list of sentences containing word tokens. 
+    """
+    doc_content = remove_header(doc_content)
+    doc_content = normalize(doc_content)
+    doc_content = split_to_sentences(doc_content)
+
+    doc_content = [tokenize(sent) for sent in doc_content]
+    doc_content = [sent for sent in doc_content if len(sent) > 0] # remove empty phrases
+    doc_content = [stemmer.stemWords(sent) for sent in doc_content]
+    
+    return doc_content

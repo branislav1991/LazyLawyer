@@ -1,10 +1,7 @@
 from database import table_docs, table_doc_contents
 import helpers
 from itertools import chain
-from nlp.curia_preprocessor import remove_header
-from nlp.curia_preprocessor import normalize
-from nlp.curia_preprocessor import tokenize
-from nlp.curia_preprocessor import split_to_sentences
+from nlp.curia_preprocessor import preprocess
 from nlp.word2vec_model import Word2Vec
 from nlp.vocabulary import Vocabulary
 from nlp.phrases import build_phrases_regex
@@ -28,11 +25,8 @@ class DocGenerator:
     
     def __next__(self):
         doc = table_doc_contents.get_doc_content(next(self.doc_gen))
-        doc = remove_header(doc)
-        doc = normalize(doc)
-        doc = split_to_sentences(doc)
-
-        return [tokenize(sent) for sent in doc]
+        doc = preprocess(doc)
+        return doc
 
 print("Initializing database and loading documents...")
 docs = table_docs.get_docs_with_name('Judgment')
@@ -43,9 +37,8 @@ helpers.create_folder_if_not_exists('trained_models')
 save_path = os.path.join('trained_models', helpers.setup_json['model_path'])
 
 print('Initializing phrases...')
-rules = [r"article \d+\w*"]
-phrases = build_phrases_regex(document_gen, rules=rules)
-phrases = [[sent for sent in doc if len(sent) > 1] for doc in phrases] # only longer phrases are relevant
+rules = [r"articl \d+\w*"]
+phrases = [build_phrases_regex(doc, rules=rules) for doc in document_gen]
 
 print('Initializing vocabulary...')
 vocabulary = Vocabulary()
