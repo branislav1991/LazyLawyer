@@ -6,9 +6,6 @@ from nlp.word2vec_model import Word2Vec
 from nlp.vocabulary import Vocabulary
 from nlp.phrases import build_phrases_regex
 import os
-import Stemmer
-
-stemmer = Stemmer.Stemmer('english')
 
 class DocGenerator:
     """Yields a document content generator based on the list of 
@@ -30,7 +27,7 @@ class DocGenerator:
 
 print("Initializing database and loading documents...")
 docs = table_docs.get_docs_with_name('Judgment')
-docs = docs[:5]
+docs = docs[:100]
 document_gen = DocGenerator(docs)
 
 helpers.create_folder_if_not_exists('trained_models')

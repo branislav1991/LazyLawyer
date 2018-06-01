@@ -5,9 +5,6 @@ from nlp.curia_preprocessor import preprocess
 from nlp.vocabulary import Vocabulary
 from nlp.phrases import build_phrases_regex
 import os
-import Stemmer
-
-stemmer = Stemmer.Stemmer('english')
 
 save_path = os.path.join('trained_models', helpers.setup_json['model_path'])
 
@@ -23,7 +20,7 @@ rules = [r"articl \d+\w*"]
 
 docs = table_docs.get_docs_with_name('Judgment')
 
-doc1 = preprocess(table_doc_contents.get_doc_content(docs[5000]))
+doc1 = preprocess(table_doc_contents.get_doc_content(docs[9000]))
 doc1 = build_phrases_regex(doc1, rules=rules)
 
 doc2 = preprocess(table_doc_contents.get_doc_content(docs[100]))

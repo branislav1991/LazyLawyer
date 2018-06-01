@@ -24,7 +24,7 @@ def normalize(doc):
     return content
 
 def split_to_sentences(doc):
-    sentences = re.split(r"(?<![A-Z])\.", doc)
+    sentences = re.split(r'(?<!\s[A-Z]|\sp|pp|\.\.|\s\.)\.(?!\.+)', doc)
     return sentences
 
 def tokenize(sentence):
