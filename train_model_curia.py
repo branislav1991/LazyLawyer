@@ -17,7 +17,7 @@ class DocGenerator:
         self.doc_gen = None
 
     def __iter__(self):
-        self.doc_gen = (doc for doc in docs)
+        self.doc_gen = (doc for doc in self.docs)
         return self
     
     def __next__(self):
@@ -25,31 +25,35 @@ class DocGenerator:
         doc = preprocess(doc)
         return doc
 
-print("Initializing database and loading documents...")
-docs = table_docs.get_docs_with_name('Judgment')
-docs = docs[:100]
-document_gen = DocGenerator(docs)
+def main():
+    print("Initializing database and loading documents...")
+    docs = table_docs.get_docs_with_name('Judgment')
+    docs = docs[:5]
+    document_gen = DocGenerator(docs)
 
-helpers.create_folder_if_not_exists('trained_models')
-save_path = os.path.join('trained_models', helpers.setup_json['model_path'])
+    helpers.create_folder_if_not_exists('trained_models')
+    save_path = os.path.join('trained_models', helpers.setup_json['model_path'])
 
-print('Initializing phrases...')
-rules = [r"articl \d+\w*",
-         r"paragraph \d+\w*",
-         r"law no",
-         r"law no \d+\w*",
-         r"direct \d+\w*",
-         r"^((31(?!\ (feb(ruary)?|apr(il)?|june?|(sep(?=\b|t)t?|nov)(emb)?)))|((30|29)(?!\ feb(ruary)?))|(29(?=\ feb(ruary)?\ (((1[6-9]|[2-9]\d)(0[48]|[2468][048]|[13579][26])|((16|[2468][048]|[3579][26])00)))))|(0?[1-9])|1\d|2[0-8])\ (jan(uary)?|feb(ruary)?|ma(r(ch)?|y)|apr(il)?|ju((li?)|(ne?))|aug(ust)?|oct(ob)?|(sep(?=\b|t)t?|nov|dec)(emb)?)$",
-         r"^((31(?!\ (feb(ruary)?|apr(il)?|june?|(sep(?=\b|t)t?|nov)(emb)?)))|((30|29)(?!\ feb(ruary)?))|(29(?=\ feb(ruary)?\ (((1[6-9]|[2-9]\d)(0[48]|[2468][048]|[13579][26])|((16|[2468][048]|[3579][26])00)))))|(0?[1-9])|1\d|2[0-8])\ (jan(uary)?|feb(ruary)?|ma(r(ch)?|y)|apr(il)?|ju((li?)|(ne?))|aug(ust)?|oct(ob)?|(sep(?=\b|t)t?|nov|dec)(emb)?)\ ((1[6-9]|[2-9]\d)\d{2})$"]
-phrases = [build_phrases_regex(doc, rules=rules) for doc in document_gen]
+    print('Initializing phrases...')
+    rules = [r"articl \d+\w*",
+            r"paragraph \d+\w*",
+            r"law no",
+            r"law no \d+\w*",
+            r"direct \d+\w*",
+            r"^((31(?!\ (feb(ruary)?|apr(il)?|june?|(sep(?=\b|t)t?|nov)(emb)?)))|((30|29)(?!\ feb(ruary)?))|(29(?=\ feb(ruary)?\ (((1[6-9]|[2-9]\d)(0[48]|[2468][048]|[13579][26])|((16|[2468][048]|[3579][26])00)))))|(0?[1-9])|1\d|2[0-8])\ (jan(uary)?|feb(ruary)?|ma(r(ch)?|y)|apr(il)?|ju((li?)|(ne?))|aug(ust)?|oct(ob)?|(sep(?=\b|t)t?|nov|dec)(emb)?)$",
+            r"^((31(?!\ (feb(ruary)?|apr(il)?|june?|(sep(?=\b|t)t?|nov)(emb)?)))|((30|29)(?!\ feb(ruary)?))|(29(?=\ feb(ruary)?\ (((1[6-9]|[2-9]\d)(0[48]|[2468][048]|[13579][26])|((16|[2468][048]|[3579][26])00)))))|(0?[1-9])|1\d|2[0-8])\ (jan(uary)?|feb(ruary)?|ma(r(ch)?|y)|apr(il)?|ju((li?)|(ne?))|aug(ust)?|oct(ob)?|(sep(?=\b|t)t?|nov|dec)(emb)?)\ ((1[6-9]|[2-9]\d)\d{2})$"]
+    phrases = [build_phrases_regex(doc, rules=rules) for doc in document_gen]
 
-print('Initializing vocabulary...')
-vocabulary = Vocabulary()
-vocabulary.initialize_and_save_vocab(phrases, save_path)
-print('Initializing idf weights...')
-vocabulary.initialize_and_save_idf(phrases, save_path)
+    print('Initializing vocabulary...')
+    vocabulary = Vocabulary()
+    vocabulary.initialize_and_save_vocab(phrases, save_path)
+    print('Initializing idf weights...')
+    vocabulary.initialize_and_save_idf(phrases, save_path)
 
-print('Initializing model...')
-model = Word2Vec(vocabulary)
-print('Starting training...')
-model.train(phrases, save_path)
+    print('Initializing model...')
+    model = Word2Vec(vocabulary)
+    print('Starting training...')
+    model.train(phrases, save_path)
+
+if __name__ == '__main__':
+    main()
