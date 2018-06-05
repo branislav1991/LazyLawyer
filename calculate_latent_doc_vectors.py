@@ -21,13 +21,12 @@ def main():
     model.load(save_path)
 
     docs = table_docs.get_docs_with_name('Judgment')
-    docs = docs[:5]
 
     for doc in docs:
         content = preprocess(table_doc_contents.get_doc_content(doc))
         content = phrases.build_phrases_regex(content)
-        latent_vec = model.get_embedding_doc(content, strategy='tf-idf')
-        table_docs.update_vector(doc, latent_vec)
+        emb = model.get_embedding_doc(content, strategy='tf-idf')
+        table_docs.update_embedding(doc, emb)
 
 if __name__ == '__main__':
     main()

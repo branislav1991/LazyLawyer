@@ -3,9 +3,11 @@ from flask import Flask, render_template, request
 import helpers
 from nlp.curia_preprocessor import preprocess
 from nlp.word2vec_model import Word2Vec
+from nlp.helpers import cosine_similarity
 from nlp.vocabulary import Vocabulary
 from nlp import phrases
 import os
+import pickle
 from textwrap import shorten
 
 app = Flask(__name__)
@@ -22,10 +24,8 @@ model.load(save_path)
 
 print('Loading documents...')
 docs = table_docs.get_docs_with_name('Judgment')
-docs = docs[:1000]
 doc_contents = [table_doc_contents.get_doc_content(doc) for doc in docs]
 doc_abstracts = [shorten(content, width=200) for content in doc_contents]
-doc_contents = [phrases.build_phrases_regex(preprocess(content)) for content in doc_contents]
 
 @app.route('/')
 def hello():
@@ -37,10 +37,12 @@ def search():
     search_query = preprocess(search_query)
     search_query = phrases.build_phrases_regex(search_query)
 
-    similarities = [model.doc_similarity(search_query, content, strategy='tf-idf') for content in doc_contents]# if doc['vector'] is not None]
+    query_emb = model.get_embedding_doc(search_query, strategy='tf-idf')
+
+    similarities = [cosine_similarity(query_emb, pickle.loads(doc['embedding'])) for doc in docs]# if doc['vector'] is not None]
 
     results = [{'link': doc['link'], 'name': doc['name'], 'abstract': abstract, 'similarity': sim} \
         for sim, doc, abstract in zip(similarities, docs, doc_abstracts)]
     results = sorted(results, key=lambda x: x['similarity'], reverse=True)
 
-    return render_template('search_results.html', results=results)
+    return render_template('search_results.html', results=results[:50])

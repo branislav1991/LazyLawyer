@@ -113,7 +113,7 @@ def _convert_to_docs_dict(db_rows):
     docs = [{'id': x[0], 'case_id': x[1], 'name': x[2], 'ecli': x[3], 'date': x[4],
             'parties': x[5], 'subject': x[6], 'link': x[7],
             'source': x[8], 'format': x[9], 'content_id': x[10],
-            'download_error': x[11], 'vector': x[12]} for x in db_rows]
+            'download_error': x[11], 'embedding': x[12]} for x in db_rows]
     return docs
 
 def create_tables(remove_old=False):
@@ -143,7 +143,7 @@ def create_tables(remove_old=False):
         format TEXT,
         content_id INTEGER,
         download_error INTEGER,
-        vector BLOB,
+        embedding BLOB,
         FOREIGN KEY (case_id) REFERENCES cases(id),
         FOREIGN KEY (content_id) REFERENCES doc_contents(id)
         )""")

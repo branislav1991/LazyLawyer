@@ -72,8 +72,8 @@ def write_download_error(doc, result):
     result = db.cursor.execute(s, (result, doc['id']))
     db.connection.commit()
 
-def update_vector(doc, vector):
-    pdata = pickle.dumps(vector, pickle.HIGHEST_PROTOCOL)
-    s = """UPDATE docs SET vector=? WHERE id=?"""
+def update_embedding(doc, embedding):
+    pdata = pickle.dumps(embedding, pickle.HIGHEST_PROTOCOL)
+    s = """UPDATE docs SET embedding=? WHERE id=?"""
     result = db.cursor.execute(s, (sqlite3.Binary(pdata), doc['id']))
     db.connection.commit()

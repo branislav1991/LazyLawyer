@@ -109,6 +109,9 @@ class Word2Vec:
             raise ValueError('strategy has to be either "average" or "tf-idf"')
 
         doc = list(chain.from_iterable(doc))
+        if len(doc) < 1:
+            emb = np.zeros((self.embedding_dim))
+            return emb
 
         if strategy == 'average':
             emb = [self.get_embedding_word(w) for w in doc]
