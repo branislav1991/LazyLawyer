@@ -6,15 +6,28 @@ default_rules = [r"articl \d+\w*",
         r"law no",
         r"law no \d+\w*",
         r"direct \d+\w*",
-        r"^((31(?!\ (feb(ruary)?|apr(il)?|june?|(sep(?=\b|t)t?|nov)(emb)?)))|((30|29)(?!\ feb(ruary)?))|(29(?=\ feb(ruary)?\ (((1[6-9]|[2-9]\d)(0[48]|[2468][048]|[13579][26])|((16|[2468][048]|[3579][26])00)))))|(0?[1-9])|1\d|2[0-8])\ (jan(uary)?|feb(ruary)?|ma(r(ch)?|y)|apr(il)?|ju((li?)|(ne?))|aug(ust)?|oct(ob)?|(sep(?=\b|t)t?|nov|dec)(emb)?)$",
-        r"^((31(?!\ (feb(ruary)?|apr(il)?|june?|(sep(?=\b|t)t?|nov)(emb)?)))|((30|29)(?!\ feb(ruary)?))|(29(?=\ feb(ruary)?\ (((1[6-9]|[2-9]\d)(0[48]|[2468][048]|[13579][26])|((16|[2468][048]|[3579][26])00)))))|(0?[1-9])|1\d|2[0-8])\ (jan(uary)?|feb(ruary)?|ma(r(ch)?|y)|apr(il)?|ju((li?)|(ne?))|aug(ust)?|oct(ob)?|(sep(?=\b|t)t?|nov|dec)(emb)?)\ ((1[6-9]|[2-9]\d)\d{2})$"]
+        r"^((31(?!\ (feb(ruari)?|apr(il)?|june?|(sep(?=\b|t)t?|nov)(emb)?)))|((30|29)(?!\ feb(ruari)?))|(29(?=\ feb(ruari)?\ (((1[6-9]|[2-9]\d)(0[48]|[2468][048]|[13579][26])|((16|[2468][048]|[3579][26])00)))))|(0?[1-9])|1\d|2[0-8])\ (jan(uari)?|feb(ruari)?|ma(r(ch)?|y)|apr(il)?|ju((li?)|(ne?))|aug(ust)?|oct(ob)?|(sep(?=\b|t)t?|nov|dec)(emb)?)$",
+        r"^((31(?!\ (feb(ruari)?|apr(il)?|june?|(sep(?=\b|t)t?|nov)(emb)?)))|((30|29)(?!\ feb(ruari)?))|(29(?=\ feb(ruari)?\ (((1[6-9]|[2-9]\d)(0[48]|[2468][048]|[13579][26])|((16|[2468][048]|[3579][26])00)))))|(0?[1-9])|1\d|2[0-8])\ (jan(uari)?|feb(ruari)?|ma(r(ch)?|y)|apr(il)?|ju((li?)|(ne?))|aug(ust)?|oct(ob)?|(sep(?=\b|t)t?|nov|dec)(emb)?)\ ((1[6-9]|[2-9]\d)\d{2})$"]
 
 
-def build_phrases_regex(document, rules=default_rules):
+def build_phrases_regex(document, rules=default_rules, iterations=2):
     """Builds phrases from tokens supplied by document.
     Input params:
     document: document containing sentences,
-    rules: regex rules to apply to find phrases.
+    rules: regex rules to apply to find phrases,
+    iterations: number of parser iterations.
+    """
+    phrases = document
+    for i in range(iterations):
+        phrases = _build_phrases_regex_iter(phrases, rules)
+    return phrases
+
+def _build_phrases_regex_iter(document, rules):
+    """Builds phrases from tokens supplied by document.
+    Input params:
+    document: document containing sentences,
+    rules: regex rules to apply to find phrases,
+    iterations: number of parser iterations.
     """
     # try regex rules on bigrams and connect them if rules apply
     phrases_document = []
@@ -39,6 +52,5 @@ def build_phrases_regex(document, rules=default_rules):
                 if not matched:
                     phrases.append(last_word)
                     i += 1
-
         phrases_document.append(phrases)
     return phrases_document

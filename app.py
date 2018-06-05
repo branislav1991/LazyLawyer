@@ -22,7 +22,7 @@ model.load(save_path)
 
 print('Loading documents...')
 docs = table_docs.get_docs_with_name('Judgment')
-docs = docs[:100]
+docs = docs[:1000]
 doc_contents = [table_doc_contents.get_doc_content(doc) for doc in docs]
 doc_abstracts = [shorten(content, width=200) for content in doc_contents]
 doc_contents = [phrases.build_phrases_regex(preprocess(content)) for content in doc_contents]

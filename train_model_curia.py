@@ -35,18 +35,18 @@ def main():
     save_path = os.path.join('trained_models', helpers.setup_json['model_path'])
 
     print('Initializing phrases...')
-    phrases = [phrases.build_phrases_regex(doc) for doc in document_gen]
+    doc_phrases = [phrases.build_phrases_regex(doc) for doc in document_gen]
 
     print('Initializing vocabulary...')
     vocabulary = Vocabulary()
-    vocabulary.initialize_and_save_vocab(phrases, save_path)
+    vocabulary.initialize_and_save_vocab(doc_phrases, save_path)
     print('Initializing idf weights...')
-    vocabulary.initialize_and_save_idf(phrases, save_path)
+    vocabulary.initialize_and_save_idf(doc_phrases, save_path)
 
     print('Initializing model...')
     model = Word2Vec(vocabulary)
     print('Starting training...')
-    model.train(phrases, save_path)
+    model.train(doc_phrases, save_path)
 
 if __name__ == '__main__':
     main()
