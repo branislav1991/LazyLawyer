@@ -1,4 +1,6 @@
 from database import database as db
+import pickle
+import sqlite3
 
 def write_docs_for_case(case, docs):
     """Stores documents belonging to a case.
@@ -68,4 +70,10 @@ def get_doc_case(doc):
 def write_download_error(doc, result):
     s = """UPDATE docs SET download_error=? WHERE id=?"""
     result = db.cursor.execute(s, (result, doc['id']))
+    db.connection.commit()
+
+def update_vector(doc, vector):
+    pdata = pickle.dumps(vector, pickle.HIGHEST_PROTOCOL)
+    s = """UPDATE docs SET vector=? WHERE id=?"""
+    result = db.cursor.execute(s, (sqlite3.Binary(pdata), doc['id']))
     db.connection.commit()

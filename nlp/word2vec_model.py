@@ -91,15 +91,39 @@ class Word2Vec:
         model_save = torch.load(os.path.join(folder, paths[-1]))
         self.model.load_state_dict(model_save)
     
-    def get_embedding(self, word):
+    def get_embedding_word(self, word):
         """Return embedding vector for a particular word.
         """
         emb = self.model.idx2emb(self.vocab.get_index(word)).data.numpy()
         return emb
 
+    def get_embedding_doc(self, doc, strategy='average'):
+        """Return embedding vector for a document.
+        Input params:
+        doc: document for which to get embedding.
+        strategy: average word embedding or weight with
+        tf-idf weights.
+        """
+        strategies = ['average', 'tf-idf']
+        if strategy not in strategies:
+            raise ValueError('strategy has to be either "average" or "tf-idf"')
+
+        doc = list(chain.from_iterable(doc))
+
+        if strategy == 'average':
+            emb = [self.get_embedding_word(w) for w in doc]
+
+        else: # tf-idf
+            tf = self.vocab.get_tfidf_weights(doc)
+            words = [w if tf.get(w) else 'UNK' for w in doc] # replace unknown words by UNK token
+            emb = [tf[w] * self.get_embedding_word(w) for w in words]
+
+        emb = np.mean(emb, axis=0)
+        return emb
+
     def word_similarity(self, word1, word2):
-        emb1 = self.get_embedding(word1)
-        emb2 = self.get_embedding(word2)
+        emb1 = self.get_embedding_word(word1)
+        emb2 = self.get_embedding_word(word2)
 
         return cosine_similarity(emb1, emb2)
 
@@ -110,28 +134,8 @@ class Word2Vec:
         organized in documents and not in sentences. This
         function works with lists of words instead of iterators.
         """
-        strategies = ['average', 'tf-idf']
-        if strategy not in strategies:
-            raise ValueError('Strategy has to be either "average" or "tf-idf"')
-
-        doc1 = list(chain.from_iterable(doc1))
-        doc2 = list(chain.from_iterable(doc2))
-
-        if strategy == 'average':
-            emb1 = [self.get_embedding(w) for w in doc1]
-            emb2 = [self.get_embedding(w) for w in doc2]
-
-        else: # tf-idf
-            tf1 = self.vocab.get_tfidf_weights(doc1)
-            words = [w if tf1.get(w) else 'UNK' for w in doc1] # replace unknown words by UNK token
-            emb1 = [tf1[w] * self.get_embedding(w) for w in words]
-
-            tf2 = self.vocab.get_tfidf_weights(doc2)
-            words = [w if tf2.get(w) else 'UNK' for w in doc2] # replace unknown words by UNK token
-            emb2 = [tf2[w] * self.get_embedding(w) for w in words]
-
-        emb1 = np.mean(emb1, axis=0)
-        emb2 = np.mean(emb2, axis=0)
+        emb1 = self.get_embedding_doc(doc1, strategy)
+        emb2 = self.get_embedding_doc(doc2, strategy)
 
         return cosine_similarity(emb1, emb2)
 
