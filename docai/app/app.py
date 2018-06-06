@@ -2,8 +2,7 @@ from docai.database import table_docs, table_doc_contents
 from flask import Flask, render_template, request
 from docai import helpers
 from docai.nlp.curia_preprocessor import preprocess
-from docai.nlp.word2vec_model import Word2Vec
-from docai.nlp.helpers import cosine_similarity
+from docai.models.word2vec import Word2Vec, cosine_similarity
 from docai.nlp.vocabulary import Vocabulary
 from docai.nlp import phrases
 import os

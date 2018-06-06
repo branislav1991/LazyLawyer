@@ -1,7 +1,6 @@
 import collections
 from itertools import chain
-from docai.nlp.helpers import cosine_similarity
-from docai.nlp.word2vec_training_dataset import Word2VecTrainingDataset
+from docai.models.word2vec_training_dataset import Word2VecTrainingDataset
 import numpy as np
 import os
 
@@ -13,6 +12,19 @@ import torch.optim as optim
 from torch.optim.lr_scheduler import StepLR
 import time
 import zipfile
+
+def cosine_similarity(a, b):
+        """Takes 2 vectors a, b and returns the cosine similarity according 
+        to the definition of the dot product
+        """
+        dot_product = np.dot(a, b)
+        norm_a = np.linalg.norm(a)
+        norm_b = np.linalg.norm(b)
+
+        if np.isclose(norm_a, 0) or np.isclose(norm_b, 0):
+            return 0
+        else:
+            return dot_product / (norm_a * norm_b)
 
 class Skipgram(nn.Module):
     """Skipgram model for learning word2vec embeddings.

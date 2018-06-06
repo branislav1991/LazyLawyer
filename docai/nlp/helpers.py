@@ -13,16 +13,3 @@ def combine_split_result(s):
         return ss
     else:
         return s
-
-def cosine_similarity(a, b):
-        """Takes 2 vectors a, b and returns the cosine similarity according 
-        to the definition of the dot product
-        """
-        dot_product = np.dot(a, b)
-        norm_a = np.linalg.norm(a)
-        norm_b = np.linalg.norm(b)
-
-        if np.isclose(norm_a, 0) or np.isclose(norm_b, 0):
-            return 0
-        else:
-            return dot_product / (norm_a * norm_b)

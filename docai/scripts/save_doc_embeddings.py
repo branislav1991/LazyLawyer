@@ -3,7 +3,7 @@ and stores the results in the 'embedding' column of the docs table.
 """
 from docai.database import table_docs, table_doc_contents
 from docai import helpers
-from docai.nlp.word2vec_model import Word2Vec
+from docai.models.word2vec import Word2Vec
 from docai.nlp.curia_preprocessor import preprocess
 from docai.nlp.vocabulary import Vocabulary
 from docai.nlp import phrases
