@@ -1,11 +1,11 @@
-from database import table_docs, table_doc_contents
+from docai.database import table_docs, table_doc_contents
 from flask import Flask, render_template, request
-import helpers
-from nlp.curia_preprocessor import preprocess
-from nlp.word2vec_model import Word2Vec
-from nlp.helpers import cosine_similarity
-from nlp.vocabulary import Vocabulary
-from nlp import phrases
+from docai import helpers
+from docai.nlp.curia_preprocessor import preprocess
+from docai.nlp.word2vec_model import Word2Vec
+from docai.nlp.helpers import cosine_similarity
+from docai.nlp.vocabulary import Vocabulary
+from docai.nlp import phrases
 import os
 import pickle
 from textwrap import shorten
@@ -26,6 +26,8 @@ print('Loading documents...')
 docs = table_docs.get_docs_with_name('Judgment')
 doc_contents = [table_doc_contents.get_doc_content(doc) for doc in docs]
 doc_abstracts = [shorten(content, width=200) for content in doc_contents]
+
+app.run()
 
 @app.route('/')
 def hello():
