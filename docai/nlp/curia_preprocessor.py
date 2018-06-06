@@ -1,5 +1,5 @@
-import helpers
-from nlp.helpers import combine_split_result
+from docai import helpers
+from docai.nlp.helpers import combine_split_result
 from itertools import chain
 import re
 import warnings

@@ -1,6 +1,6 @@
 """This script performs migration of the database.
 """
-from database import database as db
+from docai.database import database as db
 
 def main():
     db.create_tables(remove_old=True)

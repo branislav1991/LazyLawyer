@@ -1,7 +1,7 @@
 import collections
 from itertools import chain
-from nlp.helpers import cosine_similarity
-from nlp.word2vec_training_dataset import Word2VecTrainingDataset
+from docai.nlp.helpers import cosine_similarity
+from docai.nlp.word2vec_training_dataset import Word2VecTrainingDataset
 import numpy as np
 import os
 

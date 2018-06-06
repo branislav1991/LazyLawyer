@@ -1,29 +1,22 @@
 from bs4 import BeautifulSoup
-import crawlers.curia_cl_protocol
-import helpers
-import crawlers.helpers
+import docai.helpers
+import docai.crawlers.helpers
 import json
 import re
 
-class Crawler:
-    SETUP_FILE_PATH = 'crawlers/crawler_setup.json'
-
+class CURIACrawler:
+    """Crawler class for crawling over all CURIA docs (eurlex DB).
+    """
     def __init__(self):
-        pass
-
-class CURIACrawler(Crawler):
-    def __init__(self):
-        with open(Crawler.SETUP_FILE_PATH, 'r') as setup_file:
-            setup_json = json.load(setup_file) 
-            self.eu_case_law_links = setup_json['eu_case_law_links']
+        self.eu_case_law_links = docai.helpers.setup_json['eu_case_law_links']
 
     def crawl_ecj_cases(self):
         """Crawl ECJ cases and save descriptions and links to a json file.
         """
         cases_dict = []
         for link in self.eu_case_law_links:
-            html = crawlers.helpers.crawl(link['url'])
-            protocol = helpers.import_by_name(link['protocol'])
+            html = docai.crawlers.helpers.crawl(link['url'])
+            protocol = docai.helpers.import_by_name(link['protocol'])
             cases = protocol.crawl_cases(html)
             for c in cases: # append protocol to each case to know how it was crawled
                 c.update({'protocol': link['protocol']})
@@ -43,11 +36,11 @@ class CURIACrawler(Crawler):
         formats: formats of docs to download (pdf, html).
         """
         match = re.search('.*/(\d+)', case['name'])
-        year = crawlers.helpers.to_full_year(match.group(1))
+        year = docai.crawlers.helpers.to_full_year(match.group(1))
 
         if year > 1997:
-            protocol = helpers.import_by_name(case['protocol'])
-            html = crawlers.helpers.crawl(case['url'])
+            protocol = docai.helpers.import_by_name(case['protocol'])
+            html = docai.crawlers.helpers.crawl(case['url'])
 
             docs = protocol.crawl_docs(html, formats)
             return docs

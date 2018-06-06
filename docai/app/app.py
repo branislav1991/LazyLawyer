@@ -14,21 +14,6 @@ app = Flask(__name__)
 
 save_path = os.path.join('trained_models', helpers.setup_json['model_path'])
 
-print('Loading vocabulary...')
-vocabulary = Vocabulary()
-vocabulary.load(save_path)
-
-print('Loading model...')
-model = Word2Vec(vocabulary)
-model.load(save_path)
-
-print('Loading documents...')
-docs = table_docs.get_docs_with_name('Judgment')
-doc_contents = [table_doc_contents.get_doc_content(doc) for doc in docs]
-doc_abstracts = [shorten(content, width=200) for content in doc_contents]
-
-app.run()
-
 @app.route('/')
 def hello():
     return render_template('index.html')
@@ -48,3 +33,20 @@ def search():
     results = sorted(results, key=lambda x: x['similarity'], reverse=True)
 
     return render_template('search_results.html', results=results[:50])
+
+if __name__ == '__main__':
+    print('Loading vocabulary...')
+    vocabulary = Vocabulary()
+    vocabulary.load(save_path)
+
+    print('Loading model...')
+    model = Word2Vec(vocabulary)
+    model.load(save_path)
+
+    print('Loading documents...')
+    docs = table_docs.get_docs_with_name('Judgment')
+    docs = docs[:100]
+    doc_contents = [table_doc_contents.get_doc_content(doc) for doc in docs]
+    doc_abstracts = [shorten(content, width=200) for content in doc_contents]
+
+    app.run()

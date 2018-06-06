@@ -2,13 +2,13 @@
 and relevant document links for each case to the database.
 """
 import concurrent.futures
-from crawlers.crawlers import CURIACrawler
-from database import table_cases, table_docs
-import helpers
+from docai.crawlers.crawlers import CURIACrawler
+from docai.database import table_cases, table_docs
+from docai import helpers
 from tqdm import tqdm
 
 def main():
-    crawl_docs_only = True # if this is true, only docs are crawled instead of cases and docs
+    crawl_docs_only = False # if this is true, only docs are crawled instead of cases and docs
     formats = ['html', 'pdf'] # formats are processed in the order they are given
 
     crawler = CURIACrawler() 

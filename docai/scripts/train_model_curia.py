@@ -1,7 +1,3 @@
-import os
-import sys
-sys.path.insert(0, os.path.abspath('../'))
-
 from docai.database import table_docs, table_doc_contents
 from docai import helpers
 from itertools import chain
@@ -9,6 +5,7 @@ from docai.nlp.curia_preprocessor import preprocess
 from docai.nlp.word2vec_model import Word2Vec
 from docai.nlp.vocabulary import Vocabulary
 from docai.nlp import phrases
+import os
 
 class DocGenerator:
     """Yields a document content generator based on the list of 
@@ -31,7 +28,7 @@ class DocGenerator:
 def main():
     print("Initializing database and loading documents...")
     docs = table_docs.get_docs_with_name('Judgment')
-    docs = docs[:1000]
+    docs = docs[:100]
     document_gen = DocGenerator(docs)
 
     helpers.create_folder_if_not_exists('trained_models')

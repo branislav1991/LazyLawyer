@@ -1,4 +1,4 @@
-from database import database as db
+from docai.database import database as db
 import pickle
 import sqlite3
 

@@ -1,6 +1,6 @@
 from contextlib import suppress
-import helpers
-import crawlers.helpers
+import docai.helpers
+import docai.crawlers.helpers
 import itertools
 
 def _link_to_image(imgs_list):
@@ -50,7 +50,7 @@ def _crawl_doc(html_tr, formats):
                 doc_url = _link_to_image(links_curia)
                 if doc_url is not None: # if a document exists
                     with suppress(Exception): # if we fail, we might as well search further
-                        html_doc = crawlers.helpers.crawl(doc_url)
+                        html_doc = docai.crawlers.helpers.crawl(doc_url)
                         link = html_doc.find('a', {'id': 'mainForm:j_id159'})['href']
 
             elif (fs[1] == 'eurlex'):
@@ -72,7 +72,7 @@ def crawl_cases(html):
     def parse_case(row):
         try:
             link = row.find('b').a
-            url = crawlers.helpers.strip_js_window_open(link['href'])
+            url = docai.crawlers.helpers.strip_js_window_open(link['href'])
             name = link.text.strip()
             desc = row.find('i').text.strip()
             return {'url': url, 'name': name, 'desc': desc}
@@ -86,7 +86,7 @@ def crawl_docs(html, formats):
     """
     doc_url = html.find('a', {'id': 'mainForm:j_id56'})
     doc_url = doc_url['href']
-    html_doc = crawlers.helpers.crawl(doc_url)
+    html_doc = docai.crawlers.helpers.crawl(doc_url)
     try:
         all_docs_html = html_doc.find('table', {'class': 'detail_table_documents'}) \
             .find('tbody').find_all('tr', {'class': 'table_document_ligne'})

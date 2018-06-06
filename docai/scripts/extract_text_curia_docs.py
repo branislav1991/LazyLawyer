@@ -5,9 +5,9 @@ PDF documents are converted to an image format first (e.g. tiff) and
 then processed with tesseract-ocr.
 """
 
-from database import table_cases, table_docs, table_doc_contents
-from documents import doc_textextractor, doc_renderer
-import helpers
+from docai.database import table_cases, table_docs, table_doc_contents
+from docai.documents import doc_textextractor, doc_renderer
+from docai import helpers
 import os
 from pathlib import Path
 from tqdm import tqdm

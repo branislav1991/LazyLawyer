@@ -1,12 +1,12 @@
-"""Calculates latent vectors for all documents in the database
-and stores the results in the 'vector' column of the docs table.
+"""Calculates embeddings for all documents in the database
+and stores the results in the 'embedding' column of the docs table.
 """
-from database import table_docs, table_doc_contents
-import helpers
-from nlp.word2vec_model import Word2Vec
-from nlp.curia_preprocessor import preprocess
-from nlp.vocabulary import Vocabulary
-from nlp import phrases
+from docai.database import table_docs, table_doc_contents
+from docai import helpers
+from docai.nlp.word2vec_model import Word2Vec
+from docai.nlp.curia_preprocessor import preprocess
+from docai.nlp.vocabulary import Vocabulary
+from docai.nlp import phrases
 import os
 
 save_path = os.path.join('trained_models', helpers.setup_json['model_path'])

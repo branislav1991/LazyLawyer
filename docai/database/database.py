@@ -4,7 +4,7 @@ is safe to call database functions from multiple
 threads at once.
 """
 import atexit
-import helpers
+from docai import helpers
 import sqlite3
 import threading
 

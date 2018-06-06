@@ -1,4 +1,4 @@
-from database import database as db
+from docai.database import database as db
 
 def write_doc_content(doc, text):
     """Stores text for a document. Requires

@@ -3,9 +3,9 @@ and saves these documents in the doc_dir folder under the
 case name and with a unique identifier as the document name.
 """
 import concurrent.futures
-from documents import doc_downloader
-from database import table_cases, table_docs
-import helpers
+from docai.documents import doc_downloader
+from docai.database import table_cases, table_docs
+from docai import helpers
 import json
 from requests.exceptions import HTTPError
 from tqdm import tqdm
