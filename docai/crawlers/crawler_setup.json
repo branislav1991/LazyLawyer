@@ -1,6 +1,0 @@
-{
-    "eu_case_law_links": [
-        {"url": "https://curia.europa.eu/en/content/juris/c2_juris.htm", "protocol": "crawlers.curia_cl_protocol"},
-        {"url": "https://curia.europa.eu/en/content/juris/t2_juris.htm", "protocol": "crawlers.curia_cl_protocol"}
-    ]
-}
