@@ -28,7 +28,6 @@ class DocGenerator:
 def main():
     print("Initializing database and loading documents...")
     docs = table_docs.get_docs_with_name('Judgment')
-    docs = docs[:100]
     document_gen = DocGenerator(docs)
 
     helpers.create_folder_if_not_exists('trained_models')
