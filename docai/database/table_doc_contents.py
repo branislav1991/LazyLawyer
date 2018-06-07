@@ -12,7 +12,7 @@ def write_doc_content(doc, text):
     db.connection.commit()
 
     s = """UPDATE docs SET content_id=? WHERE id=?"""
-    db.cursor.execute(s, (self.cursor.lastrowid(), doc['id']))
+    db.cursor.execute(s, (db.cursor.lastrowid(), doc['id']))
     db.connection.commit()
 
 def get_doc_content(doc):
