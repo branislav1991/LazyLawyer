@@ -1,4 +1,5 @@
 import collections
+from docai.nlp.helpers import split_to_ngrams
 from itertools import chain
 import math
 import numpy as np
@@ -6,7 +7,7 @@ import pickle
 import random
 
 class Vocabulary():
-    def __init__(self, vocabulary_size=20000):
+    def __init__(self, vocabulary_size=50000):
         self.vocabulary_size = vocabulary_size
 
         self.count = []
@@ -101,3 +102,35 @@ class Vocabulary():
 
     def get_vocabulary(self):
         return self.vocab_words
+
+
+class FastTextVocabulary(Vocabulary):
+    def __init__(self, vocabulary_size=50000):
+        super().__init__(vocabulary_size)
+
+    def initialize_and_save_vocab(self, documents, path):
+        """Initializes vocabulary from the sentences iterated by
+        documents. 
+        """
+        words = chain.from_iterable(chain.from_iterable(documents))
+        word_ngrams = []
+
+        for word in words:
+            ngrams = split_to_ngrams(word)
+            word_ngrams.extend(ngrams)
+
+        self.count = [['UNK', -1]]
+        self.count.extend(collections.Counter(word_ngrams).most_common(self.vocabulary_size - 1))
+        self.vocab_words = dict()
+        for i, word_freq in enumerate(self.count):
+            self.vocab_words[word_freq[0]] = i
+
+        unk_count = 0
+        words = chain.from_iterable(chain.from_iterable(documents))
+        for word in words:
+            if word not in self.vocab_words:
+                unk_count += 1
+        self.count[0][1] = unk_count
+
+        with open(path + '_fasttext_vocab.pickle', "wb") as f:
+            pickle.dump(self.count, f)

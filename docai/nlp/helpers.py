@@ -13,3 +13,16 @@ def combine_split_result(s):
         return ss
     else:
         return s
+
+def split_to_ngrams(word, n_min=3, n_max=6):
+    """Splits word into various ngrams it contains.
+    You can specify the minimum and maximum ngram
+    size by n_min and n_max params. This function
+    also returns the original word as part of the list.
+    """
+    word_ngrams = [word]
+    if len(word) > n_min:
+        for n in range(n_min, n_max+1):
+            ngrams = [word[i:i+n] for i in range(0, len(word)-n+1)]
+            word_ngrams.extend(ngrams)
+    return word_ngrams
