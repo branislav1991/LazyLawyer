@@ -1,5 +1,7 @@
+import docai.crawlers.crawlers
 import pytest
 import docai.helpers
+import docai.crawlers.helpers
 import os
 
 def test_import():
@@ -38,3 +40,18 @@ def test_case_folder_to_name():
     folder_name = 'Hello_World_'
     case_name = docai.helpers.case_folder_to_name(folder_name)
     assert case_name == 'Hello/World/'
+
+def test_to_full_year():
+    year = '81'
+    full_year = docai.crawlers.helpers.to_full_year(year)
+    assert full_year == 1981
+    year = '32'
+    full_year = docai.crawlers.helpers.to_full_year(year)
+    assert full_year == 2032
+
+def test_crawl_ecj_cases():
+    # this test just tests if a large number of cases was
+    # downloaded and if no error occured
+    crawler = docai.crawlers.crawlers.CURIACrawler()
+    cases_dict = crawler.crawl_ecj_cases()
+    assert len(cases_dict) > 28000
