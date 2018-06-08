@@ -44,16 +44,19 @@ def get_docs_for_case(case, only_with_link=True, downloaded=True):
     rows = db.cursor.fetchall()
     return db._convert_to_docs_dict(rows)
 
-def get_docs_with_name(name, only_valid=True):
+def get_docs_with_name(name, only_valid=True, only_with_content=True):
     """Retrieves all documents with a specific name.
     Input params:
     name: name of the document to retrieve.
     only_valid: only retrieve docs which contain a link.
+    only_with_content: only retrieve docs which have downloaded
+    content in doc_contents table.
     """
+    s = """SELECT * FROM docs WHERE name=?"""
     if only_valid:
-        s = """SELECT * FROM docs WHERE name=? AND link IS NOT NULL"""
-    else:
-        s = """SELECT * FROM docs WHERE name=?"""
+        s += """ AND link IS NOT NULL"""
+    if only_with_content:
+        s += """ AND content_id IS NOT NULL"""
 
     db.cursor.execute(s, (name,))
     rows = db.cursor.fetchall()

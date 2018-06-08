@@ -2,6 +2,7 @@
 and stores the results in the 'embedding' column of the docs table.
 """
 from docai.database import table_docs, table_doc_contents
+from docai.content_generator import ContentGenerator
 from docai import helpers
 from docai.models.word2vec import Word2Vec
 from docai.nlp.curia_preprocessor import preprocess
@@ -21,10 +22,9 @@ def main():
     model.load(save_path)
 
     docs = table_docs.get_docs_with_name('Judgment')
+    content_gen = ContentGenerator(docs)
 
-    for doc in docs:
-        content = preprocess(table_doc_contents.get_doc_content(doc))
-        content = phrases.build_phrases_regex(content)
+    for doc, content in zip(docs, content_gen):
         emb = model.get_embedding_doc(content, strategy='tf-idf')
         table_docs.update_embedding(doc, emb)
 
