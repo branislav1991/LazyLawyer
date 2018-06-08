@@ -112,3 +112,6 @@ doc_dir/*
 # npy and pickle binary files
 *.npy
 *.pickle
+
+# pytest
+.pytest_cache
