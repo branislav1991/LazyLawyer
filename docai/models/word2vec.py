@@ -43,7 +43,9 @@ class Skipgram(nn.Module):
 
     def idx2emb(self, idx):
         idx = torch.tensor(idx)
-        return self.u_embeddings(idx)
+        if torch.cuda.is_available() and torch.cuda.get_device_capability(0)[0] > 4:
+            idx = idx.cuda()
+        return self.u_embeddings(idx).cpu()
 
     def forward(self, u_pos, v_pos, v_neg, batch_size):
         embed_u = self.u_embeddings(u_pos)
