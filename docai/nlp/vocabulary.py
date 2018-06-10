@@ -87,15 +87,21 @@ class Vocabulary():
                 tf[word] = tf[word] + 1
         tf = {key: value / len(doc) for key, value in tf.items()}
 
-        tfidf = {word: tf[word] * self.idf[word] for word in tf.keys() & self.idf.keys()}
+        tfidf = {word: tf[word] * self.get_idf_weight(word) for word in tf.keys() & self.idf.keys()}
         return tfidf
+
+    def get_idf_weight(self, word):
+        """Get idf weight for a word or None if word
+        not in dictionary.
+        """
+        return self.idf.get(word)
 
     def get_index(self, word):
         """Returns word index or -1 if word is not
         in dictionary.
         """
         idx = self.vocab_words.get(word)
-        return 0 if idx is None else idx
+        return -1 if idx is None else idx
 
     def get_count(self):
         return self.count
