@@ -108,8 +108,11 @@ class Word2Vec:
     def get_embedding_word(self, word):
         """Return embedding vector for a particular word.
         """
-        emb = self.model.idx2emb(self.vocab.get_index(word)).data.numpy()
-        return emb
+        idx = self.vocab.get_index(word)
+        if idx < 0:
+            return np.zeros((self.embedding_dim))
+        else:
+            return self.model.idx2emb(idx).data.numpy()
 
     def get_embedding_doc(self, doc, strategy='average'):
         """Return embedding vector for a document.
