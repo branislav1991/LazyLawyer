@@ -10,7 +10,7 @@ class CURIACrawler:
     def __init__(self):
         self.eu_case_law_links = docai.helpers.setup_json['eu_case_law_links']
 
-    def crawl_ecj_cases(self, num_cases):
+    def crawl_ecj_cases(self, num_cases=-1):
         """Crawl ECJ cases and save descriptions and links to a json file.
         Input params:
         num_cases: how many cases to crawl; if <= 0, all cases are crawled.

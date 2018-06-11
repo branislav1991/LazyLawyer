@@ -2,16 +2,15 @@ import docai.crawlers.crawlers
 import pytest
 import docai.helpers
 import docai.crawlers.helpers
+import docai.scripts.run_crawling_pipeline
+import docai.scripts.migrate_db
+import docai.database.table_doc_contents
+import docai.database.table_docs
 import os
 
 def test_import():
     for link in docai.helpers.setup_json['eu_case_law_links']:
         docai.helpers.import_by_name(link['protocol'])
-
-#def test_download_file(tmpdir):
-#    file_path = os.path.join(tmpdir, 'test.png')
-#    docai.helpers.download_file('https://dummyimage.com/600x400/000/fff', file_path)
-#    assert os.path.getsize(file_path) == 0 
 
 def test_create_batches_list():
     lst = list(range(0,10))
@@ -55,3 +54,16 @@ def test_crawl_ecj_cases():
     crawler = docai.crawlers.crawlers.CURIACrawler()
     cases_dict = crawler.crawl_ecj_cases()
     assert len(cases_dict) > 28000
+
+def test_crawling_pipeline():
+    # runs the whole crawling pipeline from obtaining cases through
+    # downloading documents to extracting text and saving it in the
+    # database. It asserts, if content for the documents named 'Judgment'
+    # is available in the 'doc_contents' table.
+    docai.scripts.migrate_db.migrate_db()
+    docai.scripts.run_crawling_pipeline.run_crawling_pipeline(num_cases=1210)
+    docs = docai.database.table_docs.get_docs_with_name('Judgment')
+    doc_contents = [docai.database.table_doc_contents.get_doc_content(doc) for doc in docs]
+    assert len(doc_contents) == 5
+    for content in doc_contents:
+        assert len(content) > 0
