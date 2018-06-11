@@ -33,7 +33,7 @@ class Vocabulary():
                 unk_count += 1
         self.count[0][1] = unk_count
 
-        with open(path + '_vocab.pickle', "wb") as f:
+        with open(path + '.pickle', "wb") as f:
             pickle.dump(self.count, f)
 
     def initialize_and_save_idf(self, documents, path):
@@ -68,7 +68,7 @@ class Vocabulary():
         """Load vocabulary and perform initialization
         of the sample table.
         """
-        with open(path + '_vocab.pickle', 'rb') as f:
+        with open(path + '.pickle', 'rb') as f:
             self.count = pickle.load(f)
             self.vocab_words = {vocab_word[0]: idx for idx, vocab_word in enumerate(self.count)}
 

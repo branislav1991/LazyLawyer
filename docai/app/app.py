@@ -11,7 +11,8 @@ from textwrap import shorten
 
 app = Flask(__name__)
 
-save_path = os.path.join('trained_models', helpers.setup_json['model_path'])
+model_path = os.path.join('trained_models', helpers.setup_json['word2vec_path'])
+vocab_path = os.path.join('trained_models', helpers.setup_json['vocab_path'])
 
 @app.route('/')
 def hello():
@@ -36,11 +37,11 @@ def search():
 if __name__ == '__main__':
     print('Loading vocabulary...')
     vocabulary = Vocabulary()
-    vocabulary.load(save_path)
+    vocabulary.load(vocab_path)
 
     print('Loading model...')
     model = Word2Vec(vocabulary)
-    model.load(save_path)
+    model.load(model_path)
 
     print('Loading documents...')
     docs = table_docs.get_docs_with_name('Judgment')

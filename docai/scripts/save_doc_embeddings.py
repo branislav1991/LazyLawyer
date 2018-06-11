@@ -10,16 +10,17 @@ from docai.nlp.vocabulary import Vocabulary
 from docai.nlp import phrases
 import os
 
-save_path = os.path.join('trained_models', helpers.setup_json['model_path'])
+model_path = os.path.join('trained_models', helpers.setup_json['word2vec_path'])
+vocab_path = os.path.join('trained_models', helpers.setup_json['vocab_path'])
 
 def main():
     print('Loading vocabulary...')
     vocabulary = Vocabulary()
-    vocabulary.load(save_path)
+    vocabulary.load(vocab_path)
 
     print('Loading model...')
     model = Word2Vec(vocabulary)
-    model.load(save_path)
+    model.load(model_path)
 
     docs = table_docs.get_docs_with_name('Judgment')
     content_gen = ContentGenerator(docs)

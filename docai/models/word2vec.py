@@ -101,7 +101,7 @@ class Word2Vec:
         """
         folder, _ = os.path.split(path)
         paths = os.listdir(folder)
-        paths = [x for x in paths if x.startswith('word2vec_model_epoch')]
+        paths = [x for x in paths if x.startswith('word2vec_epoch')]
         model_save = torch.load(os.path.join(folder, paths[-1]))
         self.model.load_state_dict(model_save)
     

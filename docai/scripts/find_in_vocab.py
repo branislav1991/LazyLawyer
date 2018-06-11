@@ -3,12 +3,12 @@ from docai.nlp.vocabulary import Vocabulary
 import os
 
 word = 'arbitr'
-save_path = os.path.join('trained_models', helpers.setup_json['model_path'])
+vocab_path = os.path.join('trained_models', helpers.setup_json['vocab_path'])
 
 if __name__ == '__main__':
     print('Loading vocabulary...')
     vocabulary = Vocabulary()
-    vocabulary.load(save_path)
+    vocabulary.load(vocab_path)
 
     idx = vocabulary.get_index(word)
     if idx == -1:
