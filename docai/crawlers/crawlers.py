@@ -10,14 +10,19 @@ class CURIACrawler:
     def __init__(self):
         self.eu_case_law_links = docai.helpers.setup_json['eu_case_law_links']
 
-    def crawl_ecj_cases(self):
+    def crawl_ecj_cases(self, num_cases):
         """Crawl ECJ cases and save descriptions and links to a json file.
+        Input params:
+        num_cases: how many cases to crawl; if <= 0, all cases are crawled.
         """
         cases_dict = []
         for link in self.eu_case_law_links:
             html = docai.crawlers.helpers.crawl(link['url'])
             protocol = docai.helpers.import_by_name(link['protocol'])
             cases = protocol.crawl_cases(html)
+            if num_cases > 0:
+                cases = cases[:num_cases]
+
             for c in cases: # append protocol to each case to know how it was crawled
                 c.update({'protocol': link['protocol']})
 
@@ -31,8 +36,7 @@ class CURIACrawler:
         by calling ecj_cases_to_json() or load_ecj_cases_json().
         Currently, cases from 1997 and older are ignored.
         Input params:
-        n_cases: how many cases to scrape. If 0, all cases are scraped (default=0).
-        skip_cases: how many cases to skip at the beginning (default=0).
+        case: case for which to crawl documents.
         formats: formats of docs to download (pdf, html).
         """
         match = re.search('.*/(\d+)', case['name'])
