@@ -70,8 +70,9 @@ class Word2VecTrainingDataset():
         """
         count = [ele[1] for ele in self.count]
         frequency = np.array(count) / sum(count)
+        epsilon = 10e-6
         # calculate probability of removal
-        P = {idx: ((f-threshold)/f) - math.sqrt(threshold/f) for idx, f in enumerate(frequency)}
+        P = {idx: ((f-threshold)/(f+epsilon)) - math.sqrt(threshold/(f+epsilon)) for idx, f in enumerate(frequency)}
 
         subsampled_sentences = []
         for sentence in sentences:
