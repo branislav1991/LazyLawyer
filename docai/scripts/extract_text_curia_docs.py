@@ -41,7 +41,7 @@ def text_from_doc(doc):
 
     return text
 
-def main():
+def extract_text_curia_docs():
     cases = table_cases.get_all_cases()
 
     docs = table_docs.get_docs_with_name('Judgment', only_valid=True, only_with_content=False)
@@ -57,4 +57,4 @@ def main():
                     table_doc_contents.write_doc_content(doc, text)
 
 if __name__ == '__main__':
-    main()
+    extract_text_curia_docs()

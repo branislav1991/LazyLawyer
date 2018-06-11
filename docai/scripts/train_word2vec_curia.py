@@ -8,7 +8,7 @@ from docai.nlp.vocabulary import Vocabulary
 from docai.nlp import phrases
 import os
 
-def main():
+def train_word2vec_curia():
     print("Initializing database and loading documents...")
     docs = table_docs.get_docs_with_name('Judgment')
     content_gen = ContentGenerator(docs)
@@ -31,4 +31,4 @@ def main():
     model.train(contents, model_path)
 
 if __name__ == '__main__':
-    main()
+    train_word2vec_curia()

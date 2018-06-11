@@ -20,11 +20,11 @@ def get_and_download_docs(case):
         except HTTPError:
             table_docs.write_download_error(doc, 1)
 
-def main():
+def download_curia_docs():
     cases = table_cases.get_all_cases()
 
     for case in tqdm(cases):
         get_and_download_docs(case)
 
 if __name__ == '__main__':
-    main()
+    download_curia_docs()

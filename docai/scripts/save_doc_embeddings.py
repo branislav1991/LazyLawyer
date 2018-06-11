@@ -13,7 +13,7 @@ import os
 model_path = os.path.join('trained_models', helpers.setup_json['word2vec_path'])
 vocab_path = os.path.join('trained_models', helpers.setup_json['vocab_path'])
 
-def main():
+def save_doc_embeddings():
     print('Loading vocabulary...')
     vocabulary = Vocabulary()
     vocabulary.load(vocab_path)
@@ -30,4 +30,4 @@ def main():
         table_docs.update_embedding(doc, emb)
 
 if __name__ == '__main__':
-    main()
+    save_doc_embeddings()

@@ -8,9 +8,13 @@ from docai.database import table_cases, table_docs
 from docai import helpers
 from tqdm import tqdm
 
-def main(args):
-    crawl_docs_only = args.docs_only # if this is true, only docs are crawled instead of cases and docs
-    num_cases = args.num_cases # if this is -1, crawl all cases; otherwise, crawl specified number of cases
+def crawl_cases_docs(crawl_docs_only=False, num_cases=-1):
+    """Crawls cases and the corresponding documents.
+    Input params:
+    crawl_docs_only: If True, does not crawl cases and only crawls docs.
+    num_cases: If <= 0, crawls all available cases. Otherwise, crawls num_cases
+    cases.
+    """
     formats = ['html', 'pdf'] # formats are processed in the order they are given
 
     crawler = CURIACrawler() 
@@ -40,4 +44,4 @@ if __name__ == '__main__':
     parser.add_argument('--num_cases', type=int, default=-1, help='only crawl a limited number of cases')
 
     args = parser.parse_args()
-    main(args)
+    crawl_cases_docs(args.docs_only, args.num_cases)
