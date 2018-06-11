@@ -44,7 +44,7 @@ def text_from_doc(doc):
 def main():
     cases = table_cases.get_all_cases()
 
-    docs = table_docs.get_docs_with_name('Judgment', only_valid=True)
+    docs = table_docs.get_docs_with_name('Judgment', only_valid=True, only_with_content=False)
     if len(docs) > 0:
         for doc in docs:
             # first check if document could be downloaded
