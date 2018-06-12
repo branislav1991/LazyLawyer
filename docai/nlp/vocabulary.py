@@ -7,14 +7,16 @@ import pickle
 import random
 
 class Vocabulary():
+    """Represents a vocabulary of words in a corpus. The words
+    are indexed and you can obtain the index by calling
+    Vocabulary.get_index(). Index is 0 for unknown words.
+    """
     def __init__(self, vocabulary_size=50000):
         self.vocabulary_size = vocabulary_size
 
         self.count = []
         self.vocab_words = {}
         self.tfidf = []
-
-        self.data_index = 0 # iteration index
 
     def initialize_and_save_vocab(self, documents, path):
         """Initializes vocabulary from the sentences iterated by
@@ -97,11 +99,11 @@ class Vocabulary():
         return self.idf.get(word)
 
     def get_index(self, word):
-        """Returns word index or -1 if word is not
+        """Returns word index or 0 (for UNK token) if word is not
         in dictionary.
         """
         idx = self.vocab_words.get(word)
-        return -1 if idx is None else idx
+        return 0 if idx is None else idx
 
     def get_count(self):
         return self.count
@@ -115,28 +117,13 @@ class FastTextVocabulary(Vocabulary):
         super().__init__(vocabulary_size)
 
     def initialize_and_save_vocab(self, documents, path):
-        """Initializes vocabulary from the sentences iterated by
-        documents. 
-        """
-        words = chain.from_iterable(chain.from_iterable(documents))
-        word_ngrams = []
+        super().initialize_and_save_vocab(documents, path + '_fasttext')
 
-        for word in words:
-            ngrams = split_to_ngrams(word)
-            word_ngrams.extend(ngrams)
+    def load_vocab(self, path):
+        super.load_vocab(path + '_fasttext')
 
-        self.count = [['UNK', -1]]
-        self.count.extend(collections.Counter(word_ngrams).most_common(self.vocabulary_size - 1))
-        self.vocab_words = dict()
-        for i, word_freq in enumerate(self.count):
-            self.vocab_words[word_freq[0]] = i
+    def initialize_and_save_idf(self, documents, path):
+        super().initialize_and_save_idf(documents, path + '_fasttext')
 
-        unk_count = 0
-        words = chain.from_iterable(chain.from_iterable(documents))
-        for word in words:
-            if word not in self.vocab_words:
-                unk_count += 1
-        self.count[0][1] = unk_count
-
-        with open(path + '_fasttext_vocab.pickle', "wb") as f:
-            pickle.dump(self.count, f)
+    def load_idf(self, path):
+        super().load_idf(path + '_fasttext')
