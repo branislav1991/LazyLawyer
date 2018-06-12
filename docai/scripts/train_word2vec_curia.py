@@ -1,11 +1,8 @@
-from docai.database import table_docs, table_doc_contents
+from docai.database import table_docs
 from docai.content_generator import ContentGenerator
 from docai import helpers
-from itertools import chain
-from docai.nlp.curia_preprocessor import preprocess
 from docai.models.word2vec import Word2Vec
 from docai.nlp.vocabulary import Vocabulary
-from docai.nlp import phrases
 import os
 
 def train_word2vec_curia():
