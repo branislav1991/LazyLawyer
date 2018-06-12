@@ -27,5 +27,16 @@ def train_word2vec_curia():
     print('Starting training...')
     model.train(contents, model_path)
 
+    print('Saving document embeddings...')
+    save_doc_embeddings(vocabulary, model)
+
+def save_doc_embeddings(vocabulary, model):
+    docs = table_docs.get_docs_with_name('Judgment')
+    content_gen = ContentGenerator(docs)
+
+    for doc, content in zip(docs, content_gen):
+        emb = model.get_embedding_doc(content, strategy='tf-idf')
+        table_docs.update_embedding(doc, emb)
+
 if __name__ == '__main__':
     train_word2vec_curia()
