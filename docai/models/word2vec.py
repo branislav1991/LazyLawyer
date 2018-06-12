@@ -1,4 +1,3 @@
-import collections
 from itertools import chain
 from docai.models.word2vec_training_dataset import Word2VecTrainingDataset
 import numpy as np
@@ -10,8 +9,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 from torch.optim.lr_scheduler import StepLR
-import time
-import zipfile
 
 def cosine_similarity(a, b):
         """Takes 2 vectors a, b and returns the cosine similarity according 
@@ -28,17 +25,14 @@ def cosine_similarity(a, b):
 
 class Skipgram(nn.Module):
     """Skipgram model for learning word2vec embeddings.
+    Assumes that index 0 is the padding index (or equivalently
+    the unknown vector).
     """
     def __init__(self, vocab_size, embedding_dim):
         super().__init__()
-        self.u_embeddings = nn.Embedding(vocab_size, embedding_dim, sparse=True)   
+        self.u_embeddings = nn.Embedding(vocab_size, embedding_dim, padding_idx=0, sparse=True)   
         self.v_embeddings = nn.Embedding(vocab_size, embedding_dim, sparse=True) 
         self.embedding_dim = embedding_dim
-        self.init_emb()
-
-    def init_emb(self):
-        initrange = 0.5 / self.embedding_dim
-        self.u_embeddings.weight.data.uniform_(-initrange, initrange)
         self.v_embeddings.weight.data.uniform_(-0, 0)
 
     def idx2emb(self, idx):
@@ -64,9 +58,6 @@ class Skipgram(nn.Module):
         loss = log_target + sum_log_sampled
         return -1*loss.sum()/batch_size
 
-    def input_embeddings(self):
-        return self.u_embeddings.weight.data.cpu().numpy()
-
     def save_embedding(self, file_name, id2word):
         embeds = self.u_embeddings.weight.data
         fo = open(file_name, 'w')
@@ -77,9 +68,7 @@ class Skipgram(nn.Module):
 
 class Word2Vec:
     def __init__(self, vocabulary, embedding_dim=200, epoch_num=10, batch_size=16, window_size=2,neg_sample_num=10):
-        """Initializes the model by building a vocabulary of most frequent words
-        and performing subsamling according to the frequency distribution proposed
-        in the word2vec paper.
+        """Initializes the model.
         """
         print('Initializing Word2Vec...')
         self.vocab = vocabulary
@@ -96,8 +85,7 @@ class Word2Vec:
             self.model.cuda()
 
     def load(self, path):
-        """Loads the last model weights and the
-        vocabulary that was built.
+        """Loads the last model weights.
         """
         folder, _ = os.path.split(path)
         paths = os.listdir(folder)
@@ -109,10 +97,7 @@ class Word2Vec:
         """Return embedding vector for a particular word.
         """
         idx = self.vocab.get_index(word)
-        if idx < 0:
-            return np.zeros((self.embedding_dim))
-        else:
-            return self.model.idx2emb(idx).data.numpy()
+        return self.model.idx2emb(idx).data.numpy()
 
     def get_embedding_doc(self, doc, strategy='average'):
         """Return embedding vector for a document.
@@ -160,8 +145,8 @@ class Word2Vec:
         return cosine_similarity(emb1, emb2)
 
     def train(self, documents, model_save_path):
-        dataset = Word2VecTrainingDataset(documents, self.vocab.get_vocabulary(), 
-            self.vocab.get_count(), self.window_size, self.batch_size, self.neg_sample_num)
+        dataset = Word2VecTrainingDataset(documents, self.vocab, 
+            self.window_size, self.batch_size, self.neg_sample_num)
 
         optimizer = optim.SGD(self.model.parameters(),lr=0.2)
         for epoch in range(self.epoch_num):

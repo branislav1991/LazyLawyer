@@ -7,13 +7,13 @@ class Word2VecTrainingDataset():
     """This class represents the training dataset used to feed pytorch with
     training data.
     """
-    def __init__(self, documents, vocab, count, window_size, batch_size, neg_sample_num):
+    def __init__(self, documents, vocab, window_size, batch_size, neg_sample_num):
         self.window_size = window_size
         self.batch_size = batch_size
         self.neg_sample_num = neg_sample_num
 
         self.vocab = vocab
-        self.count = count
+        self.count = vocab.get_count()
         self.sample_table = self.init_sample_table()
 
         self.train_data = self.initialize_training_data(documents)
@@ -27,25 +27,21 @@ class Word2VecTrainingDataset():
     def pad(self, sentence, length):
         if len(sentence) < length:
             pad_length = length - len(sentence)
-            pad_begin = [0] * (pad_length // 2)
-            pad_end = [0] * (pad_length - len(pad_begin))
-            sentence = pad_begin + sentence + pad_end
+            pad = [0] * pad_length
+            sentence = sentence + pad
         return sentence
 
-    def initialize_training_data(self, documents):
+    def initialize_training_data(self, documents, subsampling_threshold=1e-4):
         sentences = chain.from_iterable(documents)
         indexed_sentences = []
         for sentence in sentences:
             indexed_words = []
             for word in sentence:
-                if word in self.vocab:
-                    index = self.vocab[word]
-                else:
-                    index = 0  # dictionary['UNK']
+                index = self.vocab.get_index(word)
                 indexed_words.append(index)
             indexed_sentences.append(indexed_words)
 
-        train_data = self.subsampling(indexed_sentences)
+        train_data = self.subsampling(indexed_sentences, subsampling_threshold)
         return train_data
 
     def init_sample_table(self, table_size=1e6):
@@ -63,7 +59,7 @@ class Word2VecTrainingDataset():
             sample_table += [idx] * int(x)
         return np.array(sample_table)
 
-    def subsampling(self, sentences, threshold=1e-5):
+    def subsampling(self, sentences, threshold):
         """Perform subsampling according to the word
         count and the frequency probability described
         in the original paper.

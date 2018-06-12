@@ -108,9 +108,6 @@ class Vocabulary():
     def get_count(self):
         return self.count
 
-    def get_vocabulary(self):
-        return self.vocab_words
-
 
 class FastTextVocabulary(Vocabulary):
     def __init__(self, vocabulary_size=50000):
