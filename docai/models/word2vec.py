@@ -58,16 +58,8 @@ class Skipgram(nn.Module):
         loss = log_target + sum_log_sampled
         return -1*loss.sum()/batch_size
 
-    def save_embedding(self, file_name, id2word):
-        embeds = self.u_embeddings.weight.data
-        fo = open(file_name, 'w')
-        for idx in range(len(embeds)):
-            word = id2word(idx)
-            embed = ' '.join(embeds[idx])
-            fo.write(word+' '+embed+'\n')
-
 class Word2Vec:
-    def __init__(self, vocabulary, embedding_dim=200, epoch_num=10, batch_size=16, window_size=2,neg_sample_num=10):
+    def __init__(self, vocabulary, embedding_dim=200):
         """Initializes the model.
         """
         print('Initializing Word2Vec...')
@@ -144,7 +136,7 @@ class Word2Vec:
 
         return cosine_similarity(emb1, emb2)
 
-    def train(self, documents, model_save_path):
+    def train(self, documents, model_save_path, epoch_num=10, batch_size=16, window_size=2,neg_sample_num=10):
         dataset = Word2VecTrainingDataset(documents, self.vocab, 
             self.window_size, self.batch_size, self.neg_sample_num)
 

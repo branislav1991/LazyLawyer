@@ -23,7 +23,7 @@ def train_fasttext_curia():
     vocabulary.initialize_and_save_idf(contents, vocab_path)
 
     print('Initializing model...')
-    model = FastText(vocabulary, epoch_num=10)
+    model = FastText(vocabulary)
     print('Starting training...')
     model.train(contents, model_path)
 
