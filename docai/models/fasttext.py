@@ -19,7 +19,7 @@ class FastTextSkipgram(nn.Module):
     def __init__(self, vocab_size, embedding_dim):
         super().__init__()
         self.u_embeddings = nn.Embedding(vocab_size, embedding_dim, padding_idx=0, sparse=True)   
-        self.v_embeddings = nn.Embedding(vocab_size, embedding_dim, sparse=True) 
+        self.v_embeddings = nn.Embedding(vocab_size, embedding_dim, padding_idx=0, sparse=True) 
         self.embedding_dim = embedding_dim
         self.v_embeddings.weight.data.uniform_(-0, 0)
 
@@ -72,10 +72,6 @@ class FastText:
         print('Initializing Word2Vec...')
         self.vocab = vocabulary
         self.embedding_dim = embedding_dim
-        self.batch_size = batch_size
-        self.epoch_num = epoch_num
-        self.window_size = window_size
-        self.neg_sample_num = neg_sample_num
 
         # initialize dataset and model 
         self.model = FastTextSkipgram(self.vocab.vocabulary_size, embedding_dim)
@@ -92,18 +88,22 @@ class FastText:
         model_save = torch.load(os.path.join(folder, paths[-1]))
         self.model.load_state_dict(model_save)
     
-    def get_embedding_word(self, word):
+    def get_embedding_word(self, word, embedding='input'):
         """Return embedding vector for a particular word.
+        Input params:
+        word: the word we want to embed.
+        embedding: either 'input' or 'output'.
         """
         indices = self.vocab.get_indices(word)
-        return self.model.indices2emb(indices).data.numpy()
+        return self.model.indices2emb(indices, embedding).data.numpy()
 
-    def get_embedding_doc(self, doc, strategy='average'):
+    def get_embedding_doc(self, doc, strategy='average', embedding='input'):
         """Return embedding vector for a document.
         Input params:
         doc: document for which to get embedding.
         strategy: average word embedding or weight with
         tf-idf weights.
+        embedding: either 'input' or 'output'.
         """
         strategies = ['average', 'tf-idf']
         if strategy not in strategies:
@@ -115,22 +115,22 @@ class FastText:
             return emb
 
         if strategy == 'average':
-            emb = [self.get_embedding_word(w) for w in doc]
+            emb = [self.get_embedding_word(w, embedding) for w in doc]
 
         else: # tf-idf
             tf = self.vocab.get_tfidf_weights(doc)
             words = [w if tf.get(w) else 'UNK' for w in doc] # replace unknown words by UNK token
-            emb = [tf[w] * self.get_embedding_word(w) for w in words]
+            emb = [tf[w] * self.get_embedding_word(w, embedding) for w in words]
 
         emb = np.mean(emb, axis=0)
         return emb
 
     def train(self, documents, model_save_path, epoch_num=10, batch_size=16, window_size=2,neg_sample_num=10):
         dataset = FastTextTrainingDataset(documents, self.vocab, 
-            self.window_size, self.batch_size, self.neg_sample_num)
+            window_size, batch_size, neg_sample_num)
 
         optimizer = optim.SGD(self.model.parameters(),lr=0.2)
-        for epoch in range(self.epoch_num):
+        for epoch in range(epoch_num):
             batch_num = 0
 
             for pos_u, pos_v, neg_v in dataset:
@@ -144,7 +144,7 @@ class FastText:
                     neg_v = neg_v.cuda()
 
                 optimizer.zero_grad()
-                loss = self.model(pos_u, pos_v, neg_v, self.batch_size)
+                loss = self.model(pos_u, pos_v, neg_v, batch_size)
 
                 if batch_num%1000 == 0:
                     print('Epoch: {0}, Batch: {1}, Loss: {2}'.format(epoch, batch_num, loss.item()))
