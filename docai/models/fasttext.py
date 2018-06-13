@@ -125,24 +125,6 @@ class FastText:
         emb = np.mean(emb, axis=0)
         return emb
 
-    def word_similarity(self, word1, word2):
-        emb1 = self.get_embedding_word(word1)
-        emb2 = self.get_embedding_word(word2)
-
-        return cosine_similarity(emb1, emb2)
-
-    def doc_similarity(self, doc1, doc2, strategy='average'):
-        """Compares docs by either calculating an average
-        of word vectors in a document or, alternatively,
-        weighting the average by tf-idf. Words should be
-        organized in documents and not in sentences. This
-        function works with lists of words instead of iterators.
-        """
-        emb1 = self.get_embedding_doc(doc1, strategy)
-        emb2 = self.get_embedding_doc(doc2, strategy)
-
-        return cosine_similarity(emb1, emb2)
-
     def train(self, documents, model_save_path, epoch_num=10, batch_size=16, window_size=2,neg_sample_num=10):
         dataset = FastTextTrainingDataset(documents, self.vocab, 
             self.window_size, self.batch_size, self.neg_sample_num)
