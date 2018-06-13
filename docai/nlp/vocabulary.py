@@ -114,13 +114,48 @@ class FastTextVocabulary(Vocabulary):
         super().__init__(vocabulary_size)
 
     def initialize_and_save_vocab(self, documents, path):
-        super().initialize_and_save_vocab(documents, path + '_fasttext')
+        """Initializes vocabulary from the sentences iterated by
+        documents. 
+        """
+        words = chain.from_iterable(chain.from_iterable(documents))
+        ngrams = chain.from_iterable((split_to_ngrams(word) for word in words))
+
+        self.count = [['UNK', -1]]
+        self.count.extend(collections.Counter(ngrams).most_common(self.vocabulary_size - 1))
+        self.vocab_words = dict()
+        for i, word_freq in enumerate(self.count):
+            self.vocab_words[word_freq[0]] = i
+        unk_count = 0
+        words = chain.from_iterable(chain.from_iterable(documents))
+        ngrams = chain.from_iterable((split_to_ngrams(word) for word in words))
+
+        for ngram in ngrams:
+            if ngram not in self.vocab_words:
+                unk_count += 1
+        self.count[0][1] = unk_count
+
+        with open(path + '_fasttext.pickle', "wb") as f:
+            pickle.dump(self.count, f)
 
     def load_vocab(self, path):
-        super.load_vocab(path + '_fasttext')
+        super().load_vocab(path + '_fasttext')
 
     def initialize_and_save_idf(self, documents, path):
+        """We save idf frequency for whole words instead of
+        subword ngrams. This makes sense due to the fact that 
+        we weight the word vectors after averaging of the subword
+        structures.
+        """
         super().initialize_and_save_idf(documents, path + '_fasttext')
 
     def load_idf(self, path):
         super().load_idf(path + '_fasttext')
+
+    def get_indices(self, word):
+        """Returns word indices (for all ngrams) or 0 (for UNK token) 
+        if word is not in dictionary.
+        """
+        ngrams = split_to_ngrams(word)
+        indices = [self.vocab_words.get(ngram) for ngram in ngrams]
+        indices = [0 if idx is None else idx for idx in indices]
+        return indices
