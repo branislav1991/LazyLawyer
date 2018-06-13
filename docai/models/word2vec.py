@@ -35,11 +35,23 @@ class Skipgram(nn.Module):
         self.embedding_dim = embedding_dim
         self.v_embeddings.weight.data.uniform_(-0, 0)
 
-    def idx2emb(self, idx):
+    def idx2emb(self, idx, embedding='input'):
+        """Convert vocabulary index to embedding.
+        Input params:
+        idx: vocabulary index.
+        embedding: 'input' or 'output' embedding. Default: input.
+        """
+        if embedding not in ['input', 'output']:
+            raise ValueError('embedding must be either input or output')
+
         idx = torch.tensor(idx)
         if torch.cuda.is_available() and torch.cuda.get_device_capability(0)[0] > 4:
             idx = idx.cuda()
-        return self.u_embeddings(idx).cpu()
+
+        if embedding == 'input':
+            return self.u_embeddings(idx).cpu()
+        else: # if embedding == 'output':
+            return self.v_embeddings(idx).cpu()
 
     def forward(self, u_pos, v_pos, v_neg, batch_size):
         embed_u = self.u_embeddings(u_pos)

@@ -23,11 +23,25 @@ class FastTextSkipgram(nn.Module):
         self.embedding_dim = embedding_dim
         self.v_embeddings.weight.data.uniform_(-0, 0)
 
-    def indices2emb(self, indices):
+    def indices2emb(self, indices, embedding='input'):
+        """Convert vocabulary indices (from ngrams) to embedding.
+        Input params:
+        indices: vocabulary indices.
+        embedding: 'input' or 'output' embedding. Default: input.
+        """
+        if embedding not in ['input', 'output']:
+            raise ValueError('embedding must be either input or output')
+
         indices = torch.tensor(indices)
         if torch.cuda.is_available() and torch.cuda.get_device_capability(0)[0] > 4:
             indices = indices.cuda()
-        return torch.mean(self.u_embeddings(indices), dim=0).squeeze().cpu()
+
+        if embedding == 'input':
+            embeddings = self.u_embeddings(indices)
+        else: # if embedding == 'output':
+            embeddings = self.v_embeddings(indices)
+
+        return torch.mean(embeddings, dim=0).squeeze().cpu()
 
     def forward(self, u_pos, v_pos, v_neg, batch_size):
         embed_u = self.u_embeddings(u_pos)
