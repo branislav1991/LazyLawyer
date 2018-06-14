@@ -16,11 +16,14 @@ class FastTextTrainingDataset():
         self.vocab = vocab
         self.count = vocab.get_count()
         self.sample_table = self.init_sample_table()
-        self.longest_word = 0 # word containing lagest number of ngrams for padding
+
+        # word containing lagest number of ngrams for padding
+        # if a word contains more ngrams, they will be cut
+        self.longest_word = 50 
 
         self.train_data = self.initialize_training_data(documents)
         self.train_data = [sent for sent in self.train_data if len(sent) > 1] # only longer sentences are relevant
-        self.train_data = [self.pad_sentence(sent, 2*window_size + 1, self.longest_word) for sent in self.train_data]
+        self.train_data = [self.pad_sentence(sent, 2*window_size + 1) for sent in self.train_data]
 
         self.train_iterator = None
         self.current_sentence = None
@@ -28,37 +31,24 @@ class FastTextTrainingDataset():
 
     def initialize_training_data(self, documents, subsampling_threshold=1e-4):
         sentences = chain.from_iterable(documents)
-        indexed_sentences = []
-        for sentence in sentences:
-            indexed_words = []
-            for word in sentence:
-                indexed_ngrams = []
-                ngrams = split_to_ngrams(word)
-                if len(ngrams) > self.longest_word:
-                    self.longest_word = len(ngrams)
-                
-                for ngram in ngrams:
-                    indexed_ngrams.append(self.vocab.get_index(ngram))
-                indexed_words.append(indexed_ngrams)
-            indexed_sentences.append(indexed_words)
-
-        sentences = [[self.pad_ngram(word, self.longest_word) for word in sentence] for sentence in indexed_sentences]
 
         # do not perform subsampling for fasttext (yet)
         #train_data = self.subsampling(indexed_sentences, subsampling_threshold)
         return sentences
 
-    def pad_ngram(self, sentence, length):
-        if len(sentence) < length:
-            pad_length = length - len(sentence)
+    def pad_ngrams(self, ngrams, length):
+        if len(ngrams) < length:
+            pad_length = length - len(ngrams)
             pad = [0] * pad_length
-            sentence = sentence + pad
-        return sentence
+            ngrams = ngrams + pad
+        return ngrams
 
-    def pad_sentence(self, sentence, length, ngram_length):
+    def pad_sentence(self, sentence, length):
+        """Pad sentence with UNK tokens.
+        """
         if len(sentence) < length:
             pad_length = length - len(sentence)
-            pad = [[0] * ngram_length] * pad_length
+            pad = ['UNK'] * pad_length
             sentence = sentence + pad
         return sentence
 
@@ -97,12 +87,30 @@ class FastTextTrainingDataset():
     #         subsampled_sentences.append(subsampled_sentence)
     #     return subsampled_sentences
 
+    def _index_sentence(self, sentence):
+        """Obtains indices of ngrams of the words contained in
+        the sentence.
+        """
+        indexed_sentence = []
+        for word in sentence:
+            indexed_ngrams = []
+            ngrams = split_to_ngrams(word)
+            if len(ngrams) > self.longest_word:
+                ngrams = ngrams[:50]
+            else:
+                ngrams = self.pad_ngrams(ngrams, self.longest_word)
+            
+            for ngram in ngrams:
+                indexed_ngrams.append(self.vocab.get_index(ngram))
+            indexed_sentence.append(indexed_ngrams)
+        return indexed_sentence
+
     def __iter__(self):
         """Resets all iterations and starts a new iteration
         through the dataset.
         """
         self.train_iterator = iter(self.train_data)
-        self.current_sentence = next(self.train_iterator)
+        self.current_sentence = self._index_sentence(next(self.train_iterator))
         self.sentence_index = 0
         return self
 
@@ -117,7 +125,7 @@ class FastTextTrainingDataset():
         for i in range(self.batch_size):
             # if we ran out of words, just fetch next sentence
             if (self.sentence_index + span) > len(self.current_sentence):
-                self.current_sentence = next(self.train_iterator)
+                self.current_sentence = self._index_sentence(next(self.train_iterator))
                 self.sentence_index = 0
 
             buffer = self.current_sentence[self.sentence_index:self.sentence_index + span]
