@@ -7,6 +7,17 @@ import Stemmer
 
 stemmer = Stemmer.Stemmer('english')
 
+def extract_keywords(doc):
+    """Extracts keywords which are usually located on top of the judgment.
+    """
+    keywords = re.search(r'\((.*)(?=\)\s+(?:In Case|In Joined Cases))', doc)
+    if not keywords or not keywords.group(1):
+        # probably this document comes from a pdf and has no keywords attached
+        keywords = None
+    else:
+        keywords = keywords.group(1)
+    return keywords
+
 def remove_header(doc):
     content = re.split(r"(?i)gives the following[\S\s]*?judgment", doc)
     if len(content) < 2:

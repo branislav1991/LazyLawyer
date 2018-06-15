@@ -80,3 +80,9 @@ def update_embedding(doc, embedding):
     s = """UPDATE docs SET embedding=? WHERE id=?"""
     result = db.cursor.execute(s, (sqlite3.Binary(pdata), doc['id']))
     db.connection.commit()
+
+def update_keywords(doc, keywords):
+    s = """UPDATE docs SET keywords=? WHERE id=?"""
+    result = db.cursor.execute(s, (keywords, doc['id']))
+    db.connection.commit()
+    

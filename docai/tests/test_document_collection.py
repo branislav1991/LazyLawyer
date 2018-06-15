@@ -61,9 +61,9 @@ def test_crawling_pipeline():
     # database. It asserts, if content for the documents named 'Judgment'
     # is available in the 'doc_contents' table.
     docai.scripts.migrate_db.migrate_db()
-    docai.scripts.run_crawling_pipeline.run_crawling_pipeline(num_cases=1210)
+    docai.scripts.run_crawling_pipeline.run_crawling_pipeline(num_cases=1250)
     docs = docai.database.table_docs.get_docs_with_name('Judgment')
     doc_contents = [docai.database.table_doc_contents.get_doc_content(doc) for doc in docs]
-    assert len(doc_contents) == 5
+    assert len(doc_contents) == 19
     for content in doc_contents:
         assert len(content) > 0
