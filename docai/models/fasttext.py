@@ -69,7 +69,7 @@ class FastText:
     def __init__(self, vocabulary, embedding_dim=200):
         """Initializes the model.
         """
-        print('Initializing Word2Vec...')
+        print('Initializing FastText...')
         self.vocab = vocabulary
         self.embedding_dim = embedding_dim
 
