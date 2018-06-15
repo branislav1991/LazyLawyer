@@ -8,7 +8,7 @@ from docai.database import table_cases, table_docs
 from docai import helpers
 from tqdm import tqdm
 
-def crawl_curia_cases_docs(crawl_docs_only=False, num_cases=-1):
+def crawl_cases_docs_curia(crawl_docs_only=False, num_cases=-1):
     """Crawls cases and the corresponding documents.
     Input params:
     crawl_docs_only: If True, does not crawl cases and only crawls docs.
@@ -44,4 +44,4 @@ if __name__ == '__main__':
     parser.add_argument('--num_cases', type=int, default=-1, help='only crawl a limited number of cases')
 
     args = parser.parse_args()
-    crawl_cases_docs(args.docs_only, args.num_cases)
+    crawl_cases_docs_curia(args.docs_only, args.num_cases)
