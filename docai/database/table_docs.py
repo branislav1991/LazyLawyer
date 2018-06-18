@@ -66,14 +66,6 @@ def get_docs_with_names(names, only_valid=True, only_with_content=True):
     rows = db.cursor.fetchall()
     return db._convert_to_docs_dict(rows)
 
-def get_doc_case(doc):
-    """Retrieves case for a document.
-    """
-    s = """SELECT * FROM cases WHERE id=?"""
-    db.cursor.execute(s, (doc['case_id'],))
-    rows = db.cursor.fetchone()
-    return db._convert_to_cases_dict([rows])[0]
-
 def write_download_error(doc, result):
     s = """UPDATE docs SET download_error=? WHERE id=?"""
     result = db.cursor.execute(s, (result, doc['id']))

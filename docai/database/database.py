@@ -106,7 +106,7 @@ def batch_insert_check(table, vals, attrs, batch_size=100):
 
 def _convert_to_cases_dict(db_rows):
     cases = [{'id': x[0], 'name': x[1], 'desc': x[2],
-        'url': x[3], 'protocol': x[4]} for x in db_rows]
+        'url': x[3], 'protocol': x[4], 'category': x[5]} for x in db_rows]
     return cases
 
 def _convert_to_docs_dict(db_rows):
@@ -128,7 +128,8 @@ def create_tables(remove_old=False):
         name TEXT NOT NULL,
         desc TEXT NOT NULL, 
         url TEXT NOT NULL,
-        protocol TEXT NOT NULL
+        protocol TEXT NOT NULL,
+        category TEXT
         )""") 
     cursor.execute("""CREATE TABLE IF NOT EXISTS docs(
         id INTEGER PRIMARY KEY,

@@ -16,7 +16,7 @@ from tqdm import tqdm
 def text_from_doc(doc):
     """Extract text from documents in a case.
     """
-    case = table_docs.get_doc_case(doc)    
+    case = table_cases.get_case_for_doc(doc)    
     folder_path = Path('doc_dir/' + helpers.case_name_to_folder(case['name']))
 
     doc_filename = str(doc['id']) + '.' + doc['format']
