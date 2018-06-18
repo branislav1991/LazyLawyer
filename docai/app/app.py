@@ -67,7 +67,7 @@ if __name__ == '__main__':
         model.load(model_path)
 
     print('Loading documents...')
-    docs = table_docs.get_docs_with_name('Judgment')
+    docs = table_docs.get_docs_with_names(['Judgment'])
     doc_contents = [table_doc_contents.get_doc_content(doc) for doc in docs]
     doc_abstracts = [shorten(content, width=200) for content in doc_contents]
 

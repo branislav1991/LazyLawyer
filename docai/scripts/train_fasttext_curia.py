@@ -7,7 +7,7 @@ import os
 
 def train_fasttext_curia():
     print("Initializing database and loading documents...")
-    docs = table_docs.get_docs_with_name('Judgment')
+    docs = table_docs.get_docs_with_names(['Judgment'])
     content_gen = ContentGenerator(docs)
 
     helpers.create_folder_if_not_exists('trained_models')
@@ -31,7 +31,7 @@ def train_fasttext_curia():
     save_doc_embeddings(vocabulary, model)
 
 def save_doc_embeddings(vocabulary, model):
-    docs = table_docs.get_docs_with_name('Judgment')
+    docs = table_docs.get_docs_with_names(['Judgment'])
     content_gen = ContentGenerator(docs)
 
     for doc, content in zip(docs, content_gen):

@@ -7,6 +7,7 @@ then processed with tesseract-ocr.
 
 from docai.database import table_cases, table_docs, table_doc_contents
 from docai.documents import doc_textextractor, doc_renderer
+from docai.nlp.curia_preprocessor import extract_keywords
 from docai import helpers
 import os
 from pathlib import Path
@@ -42,9 +43,7 @@ def text_from_doc(doc):
     return text
 
 def extract_content_curia():
-    cases = table_cases.get_all_cases()
-
-    docs = table_docs.get_docs_with_name('Judgment', only_valid=True, only_with_content=False)
+    docs = table_docs.get_docs_with_names(['Judgment'], only_valid=True, only_with_content=False)
     if len(docs) > 0:
         for doc in docs:
             # first check if document could be downloaded
@@ -55,6 +54,10 @@ def extract_content_curia():
                 text = text_from_doc(doc)
                 if text is not None:
                     table_doc_contents.write_doc_content(doc, text)
+                    # try to extract keywords as well
+                    keywords = extract_keywords(text)
+                    if keywords:
+                        table_docs.update_keywords(doc, keywords)
 
 if __name__ == '__main__':
     extract_content_curia()
