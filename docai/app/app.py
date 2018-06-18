@@ -23,7 +23,7 @@ def hello():
 def search():
     search_query = request.form['search_text']
     search_query = preprocess(search_query)
-    search_query = phrases.build_phrases_regex(search_query)
+    #search_query = phrases.build_phrases_regex(search_query)
 
     query_emb = model.get_embedding_doc(search_query, strategy=averaging_scheme)
 

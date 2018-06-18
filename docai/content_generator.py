@@ -18,5 +18,5 @@ class ContentGenerator:
     def __next__(self):
         doc = table_doc_contents.get_doc_content(next(self.doc_gen))
         doc = preprocess(doc)
-        doc = phrases.build_phrases_regex(doc)
+        #doc = phrases.build_phrases_regex(doc)
         return doc
