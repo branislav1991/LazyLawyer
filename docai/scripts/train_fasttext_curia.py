@@ -25,7 +25,7 @@ def train_fasttext_curia():
     print('Initializing model...')
     model = FastText(vocabulary)
     print('Starting training...')
-    model.train(contents, model_path)
+    model.train(contents, model_path, epoch_num=2)
 
     print('Saving document embeddings...')
     save_doc_embeddings(vocabulary, model)
