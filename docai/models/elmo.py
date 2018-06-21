@@ -30,7 +30,11 @@ class ELMoModule(nn.Module):
         lstm_out, _ = self.LSTM(embeds, (hidden_init, cell_init))
         linear_out = self.linear(lstm_out)
         scores = F.log_softmax(linear_out, dim=2)
-        loss = F.nll_loss(scores.view(-1, self.vocab_dim, batch_size), batch.view(-1, batch_size))
+        scores = scores[:,:-1,:]
+        scores = scores.permute(1,2,0)
+        target = batch[:,1:]
+        target = target.permute(1,0)
+        loss = F.nll_loss(scores, target.view(-1, batch_size))
         return loss
 
     def save_embedding(self):
