@@ -75,11 +75,24 @@ def crawl_cases(html):
             url = docai.crawlers.helpers.strip_js_window_open(link['href'])
             name = link.text.strip()
             desc = row.find('i').text.strip()
-            return {'url': url, 'name': name, 'desc': desc}
+            court = 'GC' if name.startswith('T') else 'COJ'
+            return {'url': url, 'name': name, 'desc': desc, 'court': court}
         except (AttributeError, TypeError):
             return None
+
+    def parse_appeal(row):
+        try:
+            link = row.find('b').a
+            name = link.text.strip()
+            appeal = row.find('i').find(text='APPEAL : ')
+            appeal = appeal.parent.findNext('a').text
+            return {'orig': name, 'appeal': appeal}
+        except (AttributeError, TypeError):
+            return None
+
     cases_dict = [parse_case(r) for r in case_rows if parse_case(r) is not None]
-    return cases_dict
+    appeals_dict = [parse_appeal(r) for r in case_rows if parse_appeal(r) is not None]
+    return cases_dict, appeals_dict
 
 def crawl_docs(html, formats):
     """Crawl docs for a specific case.

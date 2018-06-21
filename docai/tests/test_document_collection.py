@@ -52,7 +52,7 @@ def test_crawl_ecj_cases():
     # this test just tests if a large number of cases was
     # downloaded and if no error occured
     crawler = docai.crawlers.crawlers.CURIACrawler()
-    cases_dict = crawler.crawl_ecj_cases()
+    cases_dict, appeals_dict = crawler.crawl_ecj_cases()
     assert len(cases_dict) > 28000
 
 def test_crawling_pipeline():

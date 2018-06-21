@@ -52,28 +52,26 @@ atexit.register(close)
 def _get_non_existing_entries(batch, table, attrs):
     """For a batch of values, check if those
     values already exist in the table based on 
-    a specific attribute. Returns all entries
+    specific attributes attrs. Returns all entries
     that are non-existent in the database.
     """
-    conditions = []
     for attr in attrs:
         batchvals = [x[attr] for x in batch]
         cond = attr + ' IN ('
         cond +=  ','.join('"{0}"'.format(b) for b in batchvals)
         cond += ')'
-        conditions.append(cond)
 
-    s = 'SELECT '
-    s += attr
-    s += ' FROM '
-    s += table
-    s += ' WHERE '
-    s += ' AND '.join(conditions)
-    cursor.execute(s)
-    rows = cursor.fetchall()
+        s = 'SELECT '
+        s += attr
+        s += ' FROM '
+        s += table
+        s += ' WHERE '
+        s += cond
+        cursor.execute(s)
+        rows = cursor.fetchall()
 
-    batchnames = [x[0] for x in rows]
-    batch = [x for x in batch if x['name'] not in batchnames]
+        batchattrs = [x[0] for x in rows]
+        batch = [x for x in batch if x[attr] not in batchattrs]
     return batch
 
 def _insert_batch(batch, table):
@@ -106,7 +104,7 @@ def batch_insert_check(table, vals, attrs, batch_size=100):
 
 def _convert_to_cases_dict(db_rows):
     cases = [{'id': x[0], 'name': x[1], 'desc': x[2],
-        'url': x[3], 'protocol': x[4], 'category': x[5]} for x in db_rows]
+        'url': x[3], 'protocol': x[4], 'court': x[5], 'category': x[6]} for x in db_rows]
     return cases
 
 def _convert_to_docs_dict(db_rows):
@@ -115,6 +113,10 @@ def _convert_to_docs_dict(db_rows):
             'source': x[8], 'format': x[9], 'content_id': x[10],
             'download_error': x[11], 'embedding': x[12], 'keywords': x[13]} for x in db_rows]
     return docs
+
+def _convert_to_appeals_dict(db_rows):
+    appeals = [{'id': x[0], 'orig_case_id': x[1], 'appeal_case_id': x[2]} for x in db_rows]
+    return appeals
 
 def create_tables(remove_old=False):
     if remove_old:
@@ -129,7 +131,9 @@ def create_tables(remove_old=False):
         desc TEXT NOT NULL, 
         url TEXT NOT NULL,
         protocol TEXT NOT NULL,
-        category TEXT
+        court TEXT,
+        category TEXT,
+        CHECK (court IN ("COJ", "GC"))
         )""") 
     cursor.execute("""CREATE TABLE IF NOT EXISTS docs(
         id INTEGER PRIMARY KEY,
@@ -154,6 +158,13 @@ def create_tables(remove_old=False):
         content BLOB NOT NULL,
         doc_id INTEGER NOT NULL,
         FOREIGN KEY (doc_id) REFERENCES docs(id)
+        )""")
+    cursor.execute("""CREATE TABLE IF NOT EXISTS appeals(
+        id INTEGER PRIMARY KEY,
+        orig_case_id INTEGER NOT NULL,
+        appeal_case_id INTEGER NOT NULL,
+        FOREIGN KEY (orig_case_id) REFERENCES cases(id),
+        FOREIGN KEY (appeal_case_id) REFERENCES cases(id)
         )""")
 
     connection.commit()

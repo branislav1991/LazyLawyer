@@ -16,10 +16,11 @@ class CURIACrawler:
         num_cases: how many cases to crawl; if <= 0, all cases are crawled.
         """
         cases_dict = []
+        appeals_dict = []
         for link in self.eu_case_law_links:
             html = docai.crawlers.helpers.crawl(link['url'])
             protocol = docai.helpers.import_by_name(link['protocol'])
-            cases = protocol.crawl_cases(html)
+            cases, appeals = protocol.crawl_cases(html)
             if num_cases > 0:
                 cases = cases[:num_cases]
 
@@ -27,8 +28,9 @@ class CURIACrawler:
                 c.update({'protocol': link['protocol']})
 
             cases_dict.extend(cases)
+            appeals_dict.extend(appeals)
         
-        return cases_dict
+        return cases_dict, appeals_dict
 
     def crawl_case_docs(self, case, formats):
         """Crawl individual cases from the case directory.

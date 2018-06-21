@@ -4,7 +4,7 @@ and relevant document links for each case to the database.
 import argparse
 import concurrent.futures
 from docai.crawlers.crawlers import CURIACrawler
-from docai.database import table_cases, table_docs
+from docai.database import table_cases, table_docs, table_appeals
 from docai import helpers
 from tqdm import tqdm
 
@@ -24,8 +24,20 @@ def crawl_cases_docs_curia(crawl_docs_only=False, num_cases=-1):
         max_case_id = table_docs.get_max_case_id_in_docs()
         cases = [x for x in cases if x['id'] > max_case_id]
     else:
-        cases = crawler.crawl_ecj_cases(num_cases)
+        cases, appeals = crawler.crawl_ecj_cases(num_cases)
         table_cases.write_cases(cases)
+
+        # convert appeal case names to numbers
+        for appeal in appeals:
+            orig_case_id = table_cases.get_case_with_name(appeal['orig'])
+            appeal['orig_case_id'] = None if not orig_case_id else orig_case_id['id']
+            appeal_case_id = table_cases.get_case_with_name(appeal['appeal'])
+            appeal['appeal_case_id'] = None if not appeal_case_id else appeal_case_id['id']
+            del appeal['orig']
+            del appeal['appeal']
+
+        appeals = [appeal for appeal in appeals if appeal['orig_case_id'] and appeal['appeal_case_id']] # remove appeals with None
+        table_appeals.write_appeals(appeals)
 
     cases_batches = helpers.create_batches_list(cases, 50)
     for batch in tqdm(cases_batches):

@@ -15,7 +15,22 @@ def get_all_cases():
     s = """SELECT * FROM cases"""
     db.cursor.execute(s)
     rows = db.cursor.fetchall()
-    return db._convert_to_cases_dict(rows)
+    if not rows:
+        return None
+    else:
+        return db._convert_to_cases_dict(rows)
+
+def get_case_with_name(name):
+    """Retrieves case with a given name. Returns
+    None if none found.
+    """
+    s = """SELECT * FROM cases WHERE name=?"""
+    db.cursor.execute(s, (name,))
+    rows = db.cursor.fetchone()
+    if not rows:
+        return None
+    else:
+        return db._convert_to_cases_dict([rows])[0]
 
 def get_case_for_doc(doc):
     """Retrieves case for a document.
@@ -23,7 +38,10 @@ def get_case_for_doc(doc):
     s = """SELECT * FROM cases WHERE id=?"""
     db.cursor.execute(s, (doc['case_id'],))
     rows = db.cursor.fetchone()
-    return db._convert_to_cases_dict([rows])[0]
+    if not rows:
+        return None
+    else:
+        return db._convert_to_cases_dict([rows])[0]
 
 def update_category(case, category):
     """Updates the category of the case.
