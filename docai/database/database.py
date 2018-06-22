@@ -55,23 +55,36 @@ def _get_non_existing_entries(batch, table, attrs):
     specific attributes attrs. Returns all entries
     that are non-existent in the database.
     """
+    conditions = []
     for attr in attrs:
         batchvals = [x[attr] for x in batch]
         cond = attr + ' IN ('
         cond +=  ','.join('"{0}"'.format(b) for b in batchvals)
         cond += ')'
+        conditions.append(cond)
 
-        s = 'SELECT '
-        s += attr
-        s += ' FROM '
-        s += table
-        s += ' WHERE '
-        s += cond
-        cursor.execute(s)
-        rows = cursor.fetchall()
+    s = 'SELECT '
+    s += ','.join(attrs)
+    s += ' FROM '
+    s += table
+    s += ' WHERE '
+    s += ' AND '.join(conditions)
+    cursor.execute(s)
+    existing_batch = cursor.fetchall()
+    existing_batch = [dict(zip(attrs, x)) for x in existing_batch]
 
-        batchattrs = [x[0] for x in rows]
-        batch = [x for x in batch if x[attr] not in batchattrs]
+    # exclude batch items in existing_batch
+    def _cmp_lists_dict(new, existing, attrs):
+        """Compare two lists of dicts based on 'attrs' keys.
+        """
+        result = []
+        for n in new:
+            n_attr = {k: v for k, v in n.items() if k in attrs}
+            if n_attr not in existing:
+                result.append(n)
+        return result
+
+    batch = _cmp_lists_dict(batch, existing_batch, attrs)
     return batch
 
 def _insert_batch(batch, table):
