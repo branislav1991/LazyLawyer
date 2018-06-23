@@ -80,6 +80,26 @@ class Vocabulary():
         self.load_vocab(path)
         self.load_idf(path)
 
+    def load_from_dict(self, word_dict):
+        """Load vocabulary from the dictionary of
+        words and embeddings.
+        """
+        self.vocabulary_size = len(word_dict) + 1 # +1 for UNK token
+
+        idx_dict = {0: np.zeros(300)}
+        self.vocab_words['UNK'] = 0
+        for i, word in enumerate(word_dict.items()):
+            self.vocab_words[word[0]] = i+1
+            idx_dict[i+1] = word[1]
+
+        # we do not have any idf info, so just assign the same weight to all
+        self.idf = {word[0]: 1.0 for word in word_dict.items()}
+        self.idf['UNK'] = 0.0
+
+        self.count = [[word, 1] for word in self.idf.keys()]
+
+        return idx_dict
+
     def get_tfidf_weights(self, doc):
         """Get term frequency of a word in a document.
         """

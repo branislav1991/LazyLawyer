@@ -3,6 +3,7 @@ from docai.database import table_docs, table_doc_contents
 from flask import Flask, render_template, request
 from docai import helpers
 from docai.nlp.curia_preprocessor import preprocess
+from docai.models.load_word2vec_binary import load_word2vec_binary
 from docai.models.word2vec import Word2Vec, cosine_similarity
 from docai.models.fasttext import FastText
 from docai.nlp.vocabulary import Vocabulary, FastTextVocabulary
@@ -37,7 +38,7 @@ def search():
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Launch flask web app.')
-    parser.add_argument('--model', choices=['word2vec', 'fasttext'], default='word2vec', help='which model should be used')
+    parser.add_argument('--model', choices=['word2vec', 'word2vec_pretrained', 'fasttext'], default='word2vec', help='which model should be used')
     parser.add_argument('--avg_scheme', default='average', help='averaging scheme for queries')
 
     args = parser.parse_args()
@@ -55,6 +56,21 @@ if __name__ == '__main__':
         print('Loading model...')
         model = Word2Vec(vocabulary)
         model.load(model_path)
+
+    elif args.model == 'word2vec_pretrained':
+        # load pretrained model from Google word2vec embeddings
+        print('Loading pretrained binary file...')
+        model_path = os.path.join('trained_models', helpers.setup_json['googlenews_word2vec_path'])
+        word_dict = load_word2vec_binary(model_path)
+
+        print('Creating vocabulary...')
+        vocabulary = Vocabulary()
+        idx_dict = vocabulary.load_from_dict(word_dict)
+
+        print('Loading model...')
+        model = Word2Vec(vocabulary, embedding_dim=300)
+        model.load_from_dict(idx_dict)
+        
     elif args.model == 'fasttext':
         model_path = os.path.join('trained_models', helpers.setup_json['fasttext_path'])
 

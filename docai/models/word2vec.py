@@ -53,6 +53,13 @@ class Skipgram(nn.Module):
         else: # if embedding == 'output':
             return self.v_embeddings(idx).cpu()
 
+    def weights_from_pretrained(self, idx_dict):
+        """Load pretrained weights from a dictionary of
+        word indices and embedding vectors.
+        """
+        for idx in idx_dict.keys():
+            self.u_embeddings.weight[idx,:] = torch.FloatTensor(idx_dict[idx])
+
     def forward(self, u_pos, v_pos, v_neg, batch_size):
         embed_u = self.u_embeddings(u_pos)
         embed_v = self.v_embeddings(v_pos)
@@ -83,6 +90,11 @@ class Word2Vec:
 
         if torch.cuda.is_available() and torch.cuda.get_device_capability(0)[0] > 4:
             self.model.cuda()
+
+    def load_from_dict(self, idx_dict):
+        """Loads a pretrained model from a word dictionary.
+        """
+        self.model.weights_from_pretrained(idx_dict)
 
     def load(self, path):
         """Loads the last model weights.

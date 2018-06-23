@@ -2,6 +2,7 @@
     "db_path": "curia.db",
     "word2vec_path": "word2vec",
     "fasttext_path": "fasttext",
+    "googlenews_word2vec_path": "GoogleNews-vectors-negative300.bin",
     "elmo_path": "elmo",
     "vocab_path": "vocab",
     "eu_case_law_links": [
