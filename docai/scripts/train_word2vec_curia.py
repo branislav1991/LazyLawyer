@@ -1,3 +1,4 @@
+import argparse
 from docai.database import table_docs
 from docai.content_generator import ContentGenerator
 from docai import helpers
@@ -5,7 +6,7 @@ from docai.models.word2vec import Word2Vec
 from docai.nlp.vocabulary import Vocabulary
 import os
 
-def train_word2vec_curia():
+def train_word2vec_curia(num_words):
     print("Initializing database and loading documents...")
     docs = table_docs.get_docs_with_names(['Judgment'])
     content_gen = ContentGenerator(docs)
@@ -17,7 +18,7 @@ def train_word2vec_curia():
     contents = list(content_gen) # generate all contents at once
 
     print('Initializing vocabulary...')
-    vocabulary = Vocabulary()
+    vocabulary = Vocabulary(vocabulary_size=num_words)
     vocabulary.initialize_and_save_vocab(contents, vocab_path)
     print('Initializing idf weights...')
     vocabulary.initialize_and_save_idf(contents, vocab_path)
@@ -39,4 +40,8 @@ def save_doc_embeddings(vocabulary, model):
         table_docs.update_embedding(doc, emb)
 
 if __name__ == '__main__':
-    train_word2vec_curia()
+    parser = argparse.ArgumentParser(description='Run whole crawling pipeline up to document content saving')
+    parser.add_argument('--num_words', type=int, default=50000, help='size of the vocabulary')
+
+    args = parser.parse_args()
+    train_word2vec_curia(args.num_words)

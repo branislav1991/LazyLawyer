@@ -5,7 +5,7 @@ import numpy as np
 import struct
 import sys
 
-def load_word2vec_binary(path, max_vectors=200000):
+def load_word2vec_binary(path, max_vectors):
     word_vecs = {} 
     with open(path, "rb") as f: 
         header = f.readline() 

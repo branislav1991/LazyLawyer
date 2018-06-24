@@ -1,3 +1,4 @@
+import argparse
 from docai.database import table_docs
 from docai.content_generator import ContentGenerator
 from docai import helpers
@@ -5,7 +6,7 @@ from docai.models.fasttext import FastText
 from docai.nlp.vocabulary import FastTextVocabulary
 import os
 
-def train_fasttext_curia():
+def train_fasttext_curia(num_ngrams):
     print("Initializing database and loading documents...")
     docs = table_docs.get_docs_with_names(['Judgment'])
     content_gen = ContentGenerator(docs)
@@ -39,4 +40,8 @@ def save_doc_embeddings(vocabulary, model):
         table_docs.update_embedding(doc, emb)
 
 if __name__ == '__main__':
-    train_fasttext_curia()
+    parser = argparse.ArgumentParser(description='Run whole crawling pipeline up to document content saving')
+    parser.add_argument('--num_ngrams', type=int, default=400000, help='size of the n-gram vocabulary')
+
+    args = parser.parse_args()
+    train_fasttext_curia(args.num_ngrams)

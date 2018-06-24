@@ -30,8 +30,8 @@ class Skipgram(nn.Module):
     """
     def __init__(self, vocab_size, embedding_dim):
         super().__init__()
-        self.u_embeddings = nn.Embedding(vocab_size, embedding_dim, padding_idx=0, sparse=True)   
-        self.v_embeddings = nn.Embedding(vocab_size, embedding_dim, padding_idx=0, sparse=True) 
+        self.u_embeddings = nn.Embedding(vocab_size, embedding_dim, padding_idx=0)   
+        self.v_embeddings = nn.Embedding(vocab_size, embedding_dim, padding_idx=0) 
         self.embedding_dim = embedding_dim
         self.v_embeddings.weight.data.uniform_(-0, 0)
 
