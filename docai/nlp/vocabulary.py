@@ -73,6 +73,7 @@ class Vocabulary():
         with open(path + '.pickle', 'rb') as f:
             self.count = pickle.load(f)
             self.vocab_words = {vocab_word[0]: idx for idx, vocab_word in enumerate(self.count)}
+            self.vocabulary_size = len(self.count)
 
     def load(self, path):
         """Load everything.

@@ -6,7 +6,7 @@ from docai.models.word2vec import Word2Vec
 from docai.nlp.vocabulary import Vocabulary
 import os
 
-def train_word2vec_curia(num_words):
+def train_word2vec_curia(num_words, epoch_num):
     print("Initializing database and loading documents...")
     docs = table_docs.get_docs_with_names(['Judgment'])
     content_gen = ContentGenerator(docs)
@@ -26,7 +26,7 @@ def train_word2vec_curia(num_words):
     print('Initializing model...')
     model = Word2Vec(vocabulary)
     print('Starting training...')
-    model.train(contents, model_path)
+    model.train(contents, model_path, epoch_num=epoch_num)
 
     print('Saving document embeddings...')
     save_doc_embeddings(vocabulary, model)
@@ -36,12 +36,13 @@ def save_doc_embeddings(vocabulary, model):
     content_gen = ContentGenerator(docs)
 
     for doc, content in zip(docs, content_gen):
-        emb = model.get_embedding_doc(content, strategy='tf-idf')
+        emb = model.get_embedding_doc(content, strategy='average')
         table_docs.update_embedding(doc, emb)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Run whole crawling pipeline up to document content saving')
     parser.add_argument('--num_words', type=int, default=50000, help='size of the vocabulary')
+    parser.add_argument('--num_epochs', type=int, default=2, help='number of epochs')
 
     args = parser.parse_args()
-    train_word2vec_curia(args.num_words)
+    train_word2vec_curia(args.num_words, args.num_epochs)
