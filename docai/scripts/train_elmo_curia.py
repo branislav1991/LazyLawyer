@@ -1,8 +1,7 @@
-from docai.database import table_docs
-from docai.content_generator import ContentGenerator
 from docai import helpers
 from docai.models.elmo import ELMo
 from docai.nlp.vocabulary import Vocabulary
+from docai.save_doc_embeddings import save_doc_embeddings
 import os
 
 def train_elmo_curia():
@@ -29,14 +28,6 @@ def train_elmo_curia():
 
     print('Saving document embeddings...')
     save_doc_embeddings(vocabulary, model)
-
-def save_doc_embeddings(vocabulary, model):
-    docs = table_docs.get_docs_with_names(['Judgment'])
-    content_gen = ContentGenerator(docs)
-
-    for doc, content in zip(docs, content_gen):
-        emb = model.get_embedding_doc(content)
-        table_docs.update_embedding(doc, emb)
 
 if __name__ == '__main__':
     train_elmo_curia()
