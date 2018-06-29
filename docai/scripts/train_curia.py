@@ -1,8 +1,10 @@
 import argparse
+from docai.database import table_docs
+from docai.content_generator import ContentGenerator
 from docai import helpers
 from docai.models.word2vec import Word2Vec
 from docai.models.fasttext import FastText
-from docai.models.fasttext import ELMo
+from docai.models.elmo import ELMo
 from docai.nlp.vocabulary import Vocabulary, FastTextVocabulary
 from docai.scripts.save_doc_embeddings import save_doc_embeddings
 import os
