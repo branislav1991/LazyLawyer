@@ -32,7 +32,7 @@ def train_elmo_curia():
     model.train(contents, model_path)
 
     print('Saving document embeddings...')
-    save_doc_embeddings(vocabulary, model)
+    save_doc_embeddings('elmo.pickle', vocabulary, model)
 
 def train_fasttext_curia(num_ngrams, epoch_num):
     print("Initializing database and loading documents...")
@@ -57,7 +57,7 @@ def train_fasttext_curia(num_ngrams, epoch_num):
     model.train(contents, model_path, epoch_num=epoch_num)
 
     print('Saving document embeddings...')
-    save_doc_embeddings(vocabulary, model)
+    save_doc_embeddings('fasttext.pickle', vocabulary, model)
 
 def train_word2vec_curia(num_words, epoch_num):
     print("Initializing database and loading documents...")
@@ -82,7 +82,7 @@ def train_word2vec_curia(num_words, epoch_num):
     model.train(contents, model_path, epoch_num=epoch_num)
 
     print('Saving document embeddings...')
-    save_doc_embeddings(vocabulary, model)
+    save_doc_embeddings('word2vec.pickle', vocabulary, model)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Train word2vec model on CURIA documents')

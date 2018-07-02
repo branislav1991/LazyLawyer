@@ -66,15 +66,23 @@ def get_docs_with_names(names, only_valid=True, only_with_content=True):
     rows = db.cursor.fetchall()
     return db._convert_to_docs_dict(rows)
 
+def get_doc_with_id(id):
+    """Retrieves a document with a corresponding id.
+    """
+    s = """SELECT * FROM docs WHERE id=?"""
+    db.cursor.execute(s, (id, ))
+    row = db.cursor.fetchone()
+    return None if row is None else db._convert_to_docs_dict([row]) 
+
 def write_download_error(doc, result):
     s = """UPDATE docs SET download_error=? WHERE id=?"""
     result = db.cursor.execute(s, (result, doc['id']))
     db.connection.commit()
 
-def update_embedding(doc, embedding):
+def update_embedding(doc_id, embedding):
     pdata = pickle.dumps(embedding, pickle.HIGHEST_PROTOCOL)
     s = """UPDATE docs SET embedding=? WHERE id=?"""
-    result = db.cursor.execute(s, (sqlite3.Binary(pdata), doc['id']))
+    result = db.cursor.execute(s, (sqlite3.Binary(pdata), doc_id))
     db.connection.commit()
 
 def update_keywords(doc, keywords):
