@@ -40,6 +40,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Launch flask web app.')
     parser.add_argument('--model', choices=['word2vec', 'word2vec_pretrained', 'fasttext'], default='word2vec', help='which model should be used')
     parser.add_argument('--avg_scheme', default='average', help='averaging scheme for queries')
+    parser.add_argument('--num_words', type=int, default=200000, help='size of the vocabulary for pretrained embeddings')
 
     args = parser.parse_args()
     averaging_scheme = args.avg_scheme
@@ -61,7 +62,7 @@ if __name__ == '__main__':
         # load pretrained model from Google word2vec embeddings
         print('Loading pretrained binary file...')
         model_path = os.path.join('trained_models', helpers.setup_json['googlenews_word2vec_path'])
-        word_dict = load_word2vec_binary(model_path)
+        word_dict = load_word2vec_binary(model_path, max_vectors=args.num_words)
 
         print('Creating vocabulary...')
         vocabulary = Vocabulary()

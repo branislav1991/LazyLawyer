@@ -46,6 +46,7 @@ def save_word2vec_pretrained_curia(num_words):
 
 def save_word2vec_curia():
     model_path = os.path.join('trained_models', helpers.setup_json['word2vec_path'])
+    vocab_path = os.path.join('trained_models', helpers.setup_json['vocab_path'])
 
     print('Loading vocabulary...')
     vocabulary = Vocabulary()
@@ -60,6 +61,7 @@ def save_word2vec_curia():
 
 def save_fasttext_curia():
     model_path = os.path.join('trained_models', helpers.setup_json['fasttext_path'])
+    vocab_path = os.path.join('trained_models', helpers.setup_json['vocab_path'])
 
     print('Loading vocabulary...')
     vocabulary = FastTextVocabulary()
