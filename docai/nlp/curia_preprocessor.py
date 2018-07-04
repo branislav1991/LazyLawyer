@@ -3,9 +3,9 @@ from docai.nlp.helpers import combine_split_result
 from itertools import chain
 import re
 import warnings
-import Stemmer
+#import Stemmer
 
-stemmer = Stemmer.Stemmer('english')
+#stemmer = Stemmer.Stemmer('english')
 
 def extract_keywords(doc):
     """Extracts keywords which are usually located on top of the judgment.
@@ -63,6 +63,6 @@ def preprocess(doc_content):
 
     doc_content = [tokenize(sent) for sent in doc_content]
     doc_content = [sent for sent in doc_content if len(sent) > 0] # remove empty phrases
-    doc_content = [stemmer.stemWords(sent) for sent in doc_content]
+    #doc_content = [stemmer.stemWords(sent) for sent in doc_content] # do not stem
     
     return doc_content
