@@ -63,6 +63,9 @@ def train_fasttext_curia(num_words, num_ngrams, max_ngram, epoch_num, embedding_
     print('Starting training...')
     model.train(contents, model_path, epoch_num=epoch_num, batch_size=16, window_size=3, neg_sample_num=5, learning_rate=learning_rate)
 
+    # save final version
+    model.save(model_path + '_final.pickle')
+
     print('Saving document embeddings...')
     save_doc_embeddings('fasttext.pickle', vocabulary, model)
 
@@ -94,6 +97,9 @@ def train_word2vec_curia(num_words, epoch_num, embedding_dim, learning_rate):
     model = Word2Vec(vocabulary, embedding_dim=embedding_dim)
     print('Starting training...')
     model.train(contents, model_path, epoch_num=epoch_num, batch_size=16, window_size=3, neg_sample_num=5, learning_rate=learning_rate)
+
+    # save final version
+    model.save(model_path + '_final.pickle')
 
     print('Saving document embeddings...')
     save_doc_embeddings('word2vec.pickle', vocabulary, model)

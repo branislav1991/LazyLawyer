@@ -99,7 +99,7 @@ class Word2Vec:
         """
         folder, name = os.path.split(path)
         paths = os.listdir(folder)
-        paths = [x for x in paths if x.startswith(name + '_epoch')]
+        paths = [x for x in paths if x.startswith(name + '_epoch') or x.startswith(name + '_final')]
         model_save = torch.load(os.path.join(folder, paths[-1]))
         self.model.load_state_dict(model_save)
     
@@ -139,6 +139,11 @@ class Word2Vec:
 
         emb = np.mean(emb, axis=0)
         return emb
+
+    def save(self, model_save_filename):
+        """Save current model state.
+        """
+        torch.save(self.model.state_dict(), model_save_filename)
 
     def train(self, documents, model_save_path, epoch_num, batch_size, window_size, neg_sample_num, learning_rate):
         dataset = Word2VecTrainingDataset(documents, self.vocab, 
