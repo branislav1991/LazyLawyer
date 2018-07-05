@@ -19,11 +19,11 @@ class FastTextTrainingDataset():
 
         # word containing lagest number of ngrams for padding
         # if a word contains more ngrams, they will be cut
-        self.longest_word = self.vocab.max_ngram 
+        self.max_ngram = self.vocab.max_ngram 
 
         self.train_data = self.initialize_training_data(documents)
         self.train_data = [sent for sent in self.train_data if len(sent) > 1] # only longer sentences are relevant
-        self.train_data = [self.pad_sentence(sent, 2*window_size + 1) for sent in self.train_data]
+        self.train_data = [self.pad_sentence(sent, 2*window_size + 1, self.max_ngram) for sent in self.train_data]
 
         self.train_iterator = None
         self.current_sentence = None
@@ -32,9 +32,21 @@ class FastTextTrainingDataset():
     def initialize_training_data(self, documents, subsampling_threshold=1e-4):
         sentences = chain.from_iterable(documents)
 
-        # do not perform subsampling for fasttext (yet)
-        #train_data = self.subsampling(indexed_sentences, subsampling_threshold)
-        return sentences
+        indexed_sentences = []
+        for sentence in sentences:
+            indexed_sentence = []
+            for word in sentence:
+                indexed_ngrams = []
+                ngrams = split_to_ngrams(word, max_ngram=self.max_ngram)
+                ngrams = self.pad_ngrams(ngrams, self.max_ngram)
+                
+                for ngram in ngrams:
+                    indexed_ngrams.append(self.vocab.get_index(ngram))
+                indexed_sentence.append(indexed_ngrams)
+            indexed_sentences.append(indexed_sentence)
+
+        train_data = self.subsampling(indexed_sentences, subsampling_threshold)
+        return train_data
 
     def pad_ngrams(self, ngrams, length):
         if len(ngrams) < length:
@@ -43,12 +55,12 @@ class FastTextTrainingDataset():
             ngrams = ngrams + pad
         return ngrams
 
-    def pad_sentence(self, sentence, length):
+    def pad_sentence(self, sentence, length, max_ngram):
         """Pad sentence with UNK tokens.
         """
         if len(sentence) < length:
             pad_length = length - len(sentence)
-            pad = ['UNK'] * pad_length
+            pad = [[0] * max_ngram] * pad_length
             sentence = sentence + pad
         return sentence
 
@@ -67,25 +79,29 @@ class FastTextTrainingDataset():
             sample_table += [idx] * int(x)
         return np.array(sample_table)
 
-    # def subsampling(self, sentences, threshold):
-    #     """Perform subsampling according to the word
-    #     count and the frequency probability described
-    #     in the original paper.
-    #     """
-    #     count = [ele[1] for ele in self.count]
-    #     frequency = np.array(count) / sum(count)
-    #     epsilon = 10e-6
-    #     # calculate probability of removal
-    #     P = {idx: ((f-threshold)/(f+epsilon)) - math.sqrt(threshold/(f+epsilon)) for idx, f in enumerate(frequency)}
+    def subsampling(self, sentences, threshold):
+        """Perform subsampling according to the word
+        count and the frequency probability described
+        in the original paper. Note that the subsampling
+        is only performed according to the whole word
+        without taking n-grams into account.
+        """
+        count = [ele[1] for ele in self.count]
+        frequency = np.array(count) / sum(count)
+        epsilon = 10e-6
+        # calculate probability of removal
+        P = {idx: ((f-threshold)/(f+epsilon)) - math.sqrt(threshold/(f+epsilon)) for idx, f in enumerate(frequency)}
+        P[0] = 0.5 # set probability of removal of UNK token to 0.5
 
-    #     subsampled_sentences = []
-    #     for sentence in sentences:
-    #         subsampled_sentence = []
-    #         for word in sentence:
-    #             if random.random() > P[word]:
-    #                 subsampled_sentence.append(word)
-    #         subsampled_sentences.append(subsampled_sentence)
-    #     return subsampled_sentences
+        subsampled_sentences = []
+        for sentence in sentences:
+            subsampled_sentence = []
+            for ngrams in sentence:
+                word = ngrams[0] # first ngram is the actual word
+                if random.random() > P[word]:
+                    subsampled_sentence.append(ngrams)
+            subsampled_sentences.append(subsampled_sentence)
+        return subsampled_sentences
 
     def _index_sentence(self, sentence):
         """Obtains indices of ngrams of the words contained in
@@ -94,8 +110,8 @@ class FastTextTrainingDataset():
         indexed_sentence = []
         for word in sentence:
             indexed_ngrams = []
-            ngrams = split_to_ngrams(word, max_ngram=self.longest_word)
-            ngrams = self.pad_ngrams(ngrams, self.longest_word)
+            ngrams = split_to_ngrams(word, max_ngram=self.max_ngram)
+            ngrams = self.pad_ngrams(ngrams, self.max_ngram)
             
             for ngram in ngrams:
                 indexed_ngrams.append(self.vocab.get_index(ngram))
@@ -107,14 +123,14 @@ class FastTextTrainingDataset():
         through the dataset.
         """
         self.train_iterator = iter(self.train_data)
-        self.current_sentence = self._index_sentence(next(self.train_iterator))
+        self.current_sentence = next(self.train_iterator)
         self.sentence_index = 0
         return self
 
     def __next__(self):
         span = 2 * self.window_size + 1
-        context = np.ndarray(shape=(self.batch_size, 2 * self.window_size, self.longest_word), dtype=np.int64)
-        labels = np.ndarray(shape=(self.batch_size, self.longest_word), dtype=np.int64)
+        context = np.ndarray(shape=(self.batch_size, 2 * self.window_size, self.max_ngram), dtype=np.int64)
+        labels = np.ndarray(shape=(self.batch_size, self.max_ngram), dtype=np.int64)
 
         pos_u = []
         pos_v = []
@@ -122,7 +138,7 @@ class FastTextTrainingDataset():
         for i in range(self.batch_size):
             # if we ran out of words, just fetch next sentence
             if (self.sentence_index + span) > len(self.current_sentence):
-                self.current_sentence = self._index_sentence(next(self.train_iterator))
+                self.current_sentence = next(self.train_iterator)
                 self.sentence_index = 0
 
             buffer = self.current_sentence[self.sentence_index:self.sentence_index + span]
@@ -135,5 +151,5 @@ class FastTextTrainingDataset():
 
             self.sentence_index += 1
 
-        neg_v = np.random.choice(self.sample_table, size=(self.batch_size*2*self.window_size, self.longest_word, self.neg_sample_num))
+        neg_v = np.random.choice(self.sample_table, size=(self.batch_size*2*self.window_size, self.max_ngram, self.neg_sample_num))
         return np.array(pos_u), np.array(pos_v), neg_v

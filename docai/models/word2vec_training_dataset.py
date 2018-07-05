@@ -69,6 +69,7 @@ class Word2VecTrainingDataset():
         epsilon = 10e-6
         # calculate probability of removal
         P = {idx: ((f-threshold)/(f+epsilon)) - math.sqrt(threshold/(f+epsilon)) for idx, f in enumerate(frequency)}
+        P[0] = 0.5 # set probability of removal of UNK token to 0.5
 
         subsampled_sentences = []
         for sentence in sentences:
