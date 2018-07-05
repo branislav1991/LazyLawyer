@@ -6,7 +6,7 @@ from docai.nlp.curia_preprocessor import preprocess
 from docai.models.load_word2vec_binary import load_word2vec_binary
 from docai.models.word2vec import Word2Vec, cosine_similarity
 from docai.models.fasttext import FastText
-from docai.nlp.vocabulary import Vocabulary, FastTextVocabulary
+from docai.models.vocabulary import Vocabulary, FastTextVocabulary
 from docai.nlp import phrases
 import os
 import pickle
@@ -27,7 +27,7 @@ def search():
 
     query_emb = model.get_embedding_doc(search_query, strategy=averaging_scheme)
 
-    similarities = [cosine_similarity(query_emb, pickle.loads(doc['embedding'])) for doc in docs]# if doc['vector'] is not None]
+    similarities = [cosine_similarity(query_emb, pickle.loads(doc['embedding'])) for doc in docs]
 
     results = [{'link': doc['link'], 'name': doc['name'], 'abstract': abstract, 'similarity': sim} \
         for sim, doc, abstract in zip(similarities, docs, doc_abstracts)]
@@ -38,23 +38,25 @@ def search():
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Launch flask web app.')
     parser.add_argument('--model', choices=['word2vec', 'word2vec_pretrained', 'fasttext'], default='word2vec', help='which model should be used')
-    parser.add_argument('--avg_scheme', default='average', help='averaging scheme for queries')
-    parser.add_argument('--num_words', type=int, default=200000, help='size of the vocabulary for pretrained embeddings')
+    parser.add_argument('--avg_scheme', default='average', help='averaging scheme for queries; fasttext supports only average')
+    parser.add_argument('--num_words', type=int, default=200000, help='size of the vocabulary for word2vec_pretrained model')
 
     args = parser.parse_args()
     averaging_scheme = args.avg_scheme
 
-    vocab_path = os.path.join('trained_models', helpers.setup_json['vocab_path'])
-
     if args.model == 'word2vec':
         model_path = os.path.join('trained_models', helpers.setup_json['word2vec_path'])
+        meta_path = model_path + '_meta.pickle'
 
-        print('Loading vocabulary...')
-        vocabulary = Vocabulary()
-        vocabulary.load(vocab_path)
+        print('Loading metainfo...')
+        with open(meta_path, 'rb') as f:
+            meta_info = pickle.load(f)
+
+        vocabulary = Vocabulary(count=meta_info['word_count'])
+        vocabulary.load_idf(meta_info['idf'])
 
         print('Loading model...')
-        model = Word2Vec(vocabulary)
+        model = Word2Vec(vocabulary, meta_info['embedding_dim'])
         model.load(model_path)
 
     elif args.model == 'word2vec_pretrained':
@@ -64,7 +66,7 @@ if __name__ == '__main__':
         word_dict = load_word2vec_binary(model_path, max_vectors=args.num_words)
 
         print('Creating vocabulary...')
-        vocabulary = Vocabulary()
+        vocabulary = Vocabulary(vocab_dict=word_dict)
         idx_dict = vocabulary.load_from_dict(word_dict)
 
         print('Loading model...')
@@ -73,13 +75,16 @@ if __name__ == '__main__':
         
     elif args.model == 'fasttext':
         model_path = os.path.join('trained_models', helpers.setup_json['fasttext_path'])
+        meta_path = model_path + '_meta.pickle'
 
-        print('Loading vocabulary...')
-        vocabulary = FastTextVocabulary()
-        vocabulary.load(vocab_path)
+        print('Loading metainfo...')
+        with open(meta_path, 'rb') as f:
+            meta_info = pickle.load(f)
+
+        vocabulary = FastTextVocabulary(count=meta_info['word_count'], max_ngram=meta_info['max_ngram'])
 
         print('Loading model...')
-        model = FastText(vocabulary)
+        model = FastText(vocabulary, meta_info['embedding_dim'])
         model.load(model_path)
 
     print('Loading documents...')

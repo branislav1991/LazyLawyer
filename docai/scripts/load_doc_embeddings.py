@@ -6,9 +6,8 @@ import os
 import pickle
 
 def load_doc_embeddings(file_name):
-    """Loads document embeddings from a file using the 
-    provided model and vocabulary. This function requires that the model
-    supports the get_embedding_doc interface.
+    """Loads document embeddings from a file and saves
+    them in the database.
     """
     docs = table_docs.get_docs_with_names(['Judgment'])
 

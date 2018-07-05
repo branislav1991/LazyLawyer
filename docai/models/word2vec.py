@@ -78,15 +78,13 @@ class Skipgram(nn.Module):
         return -1*loss.sum()/batch_size
 
 class Word2Vec:
-    def __init__(self, vocabulary, embedding_dim=200):
-        """Initializes the model.
+    def __init__(self, vocabulary, embedding_dim):
+        """Initializes the model. 
         """
         print('Initializing Word2Vec...')
         self.vocab = vocabulary
         self.embedding_dim = embedding_dim
-
-        # initialize dataset and model 
-        self.model = Skipgram(self.vocab.vocabulary_size, embedding_dim)
+        self.model = Skipgram(self.vocab.vocab_size(), self.embedding_dim)
 
         if torch.cuda.is_available() and torch.cuda.get_device_capability(0)[0] > 4:
             self.model.cuda()
@@ -99,9 +97,9 @@ class Word2Vec:
     def load(self, path):
         """Loads the last model weights.
         """
-        folder, _ = os.path.split(path)
+        folder, name = os.path.split(path)
         paths = os.listdir(folder)
-        paths = [x for x in paths if x.startswith('word2vec_epoch')]
+        paths = [x for x in paths if x.startswith(name + '_epoch')]
         model_save = torch.load(os.path.join(folder, paths[-1]))
         self.model.load_state_dict(model_save)
     
@@ -142,11 +140,11 @@ class Word2Vec:
         emb = np.mean(emb, axis=0)
         return emb
 
-    def train(self, documents, model_save_path, epoch_num=10, batch_size=16, window_size=2,neg_sample_num=10):
+    def train(self, documents, model_save_path, epoch_num, batch_size, window_size, neg_sample_num, learning_rate):
         dataset = Word2VecTrainingDataset(documents, self.vocab, 
             window_size, batch_size, neg_sample_num)
 
-        optimizer = optim.SGD(self.model.parameters(),lr=0.2)
+        optimizer = optim.SGD(self.model.parameters(),lr=learning_rate)
         for epoch in range(epoch_num):
             batch_num = 0
 
@@ -169,7 +167,7 @@ class Word2Vec:
                 loss.backward()
                 optimizer.step()
 
-                if batch_num%30000 == 0:
+                if batch_num%300000 == 0:
                     torch.save(self.model.state_dict(), model_save_path + '_epoch{}.batch{}.pickle'.format(epoch,batch_num))
 
                 batch_num = batch_num + 1 

@@ -14,15 +14,23 @@ def combine_split_result(s):
     else:
         return s
 
-def split_to_ngrams(word, n_min=3, n_max=6):
+def split_to_ngrams(word, n_min=3, n_max=6, max_ngram=10):
     """Splits word into various ngrams it contains.
     You can specify the minimum and maximum ngram
     size by n_min and n_max params. This function
     also returns the original word as part of the list.
+    max_ngram specifies the maximal number of ngrams that
+    are generated.
     """
     word_ngrams = [word]
+
+    # add special characters for beginning and end of the word
+    word = '*' + word + '*'
     if len(word) > n_min:
         for n in range(n_min, n_max+1):
             ngrams = [word[i:i+n] for i in range(0, len(word)-n+1)]
             word_ngrams.extend(ngrams)
+    if len(word_ngrams) > max_ngram:
+        word_ngrams = word_ngrams[:max_ngram]
+
     return word_ngrams

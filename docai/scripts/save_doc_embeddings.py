@@ -4,7 +4,7 @@ from docai.content_generator import ContentGenerator
 from docai.models.word2vec import Word2Vec
 from docai.models.fasttext import FastText
 from docai.models.load_word2vec_binary import load_word2vec_binary
-from docai.nlp.vocabulary import Vocabulary, FastTextVocabulary
+from docai.models.vocabulary import Vocabulary, FastTextVocabulary
 from docai import helpers
 import os
 import pickle
@@ -46,14 +46,17 @@ def save_word2vec_pretrained_curia(num_words):
 
 def save_word2vec_curia():
     model_path = os.path.join('trained_models', helpers.setup_json['word2vec_path'])
-    vocab_path = os.path.join('trained_models', helpers.setup_json['vocab_path'])
+    meta_path = model_path + '_meta.pickle'
 
-    print('Loading vocabulary...')
-    vocabulary = Vocabulary()
-    vocabulary.load(vocab_path)
+    print('Loading metainfo...')
+    with open(meta_path, 'rb') as f:
+        meta_info = pickle.load(f)
+
+    vocabulary = Vocabulary(count=meta_info['word_count'])
+    vocabulary.load_idf(meta_info['idf'])
 
     print('Loading model...')
-    model = Word2Vec(vocabulary)
+    model = Word2Vec(vocabulary, meta_info['embedding_dim'])
     model.load(model_path)
 
     print('Saving document embeddings...')
@@ -61,14 +64,16 @@ def save_word2vec_curia():
 
 def save_fasttext_curia():
     model_path = os.path.join('trained_models', helpers.setup_json['fasttext_path'])
-    vocab_path = os.path.join('trained_models', helpers.setup_json['vocab_path'])
+    meta_path = model_path + '_meta.pickle'
 
-    print('Loading vocabulary...')
-    vocabulary = FastTextVocabulary()
-    vocabulary.load(vocab_path)
+    print('Loading metainfo...')
+    with open(meta_path, 'rb') as f:
+        meta_info = pickle.load(f)
+
+    vocabulary = FastTextVocabulary(count=meta_info['word_count'], max_ngram=meta_info['max_ngram'])
 
     print('Loading model...')
-    model = FastText(vocabulary)
+    model = FastText(vocabulary, meta_info['embedding_dim'])
     model.load(model_path)
 
     print('Saving document embeddings...')
@@ -77,7 +82,7 @@ def save_fasttext_curia():
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Save document embeddings using a certain model')
     parser.add_argument('model', choices=['word2vec', 'word2vec_pretrained', 'fasttext'], default='word2vec', help='which model should be used')
-    parser.add_argument('--num_words', type=int, default=200000, help='size of the vocabulary for pretrained embeddings')
+    parser.add_argument('--num_words', type=int, default=100000, help='size of the vocabulary for pretrained embeddings')
 
     args = parser.parse_args()
 

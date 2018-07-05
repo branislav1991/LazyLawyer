@@ -11,20 +11,25 @@ class Vocabulary():
     are indexed and you can obtain the index by calling
     Vocabulary.get_index(). Index is 0 for unknown words.
     """
-    def __init__(self, vocabulary_size=50000):
-        self.vocabulary_size = vocabulary_size
+    def __init__(self, **kwargs):
+        """Initialize vocabulary.
+        """
+        if 'count' in kwargs: # user wants to load existing vocab
+            self.load(kwargs['count'])
+        elif 'documents' in kwargs: # generate a new vocab out of documents and save to path
+            self.initialize_vocab(kwargs['documents'], kwargs['max_vocab_size'])
+        elif 'vocab_dict' in kwargs:
+            self.load_from_dict(kwargs['vocab_dict'])
+        else:
+            raise ValueError('Wrong keyword arguments for vocabulary initialization')
 
-        self.count = []
-        self.vocab_words = {}
-        self.tfidf = []
-
-    def initialize_and_save_vocab(self, documents, path):
+    def initialize_vocab(self, documents, max_vocab_size):
         """Initializes vocabulary from the sentences iterated by
         documents. 
         """
         words = chain.from_iterable(chain.from_iterable(documents))
         self.count = [['UNK', -1]]
-        self.count.extend(collections.Counter(words).most_common(self.vocabulary_size - 1))
+        self.count.extend(collections.Counter(words).most_common(max_vocab_size - 1))
         self.vocab_words = dict()
         for i, word_freq in enumerate(self.count):
             self.vocab_words[word_freq[0]] = i
@@ -35,10 +40,7 @@ class Vocabulary():
                 unk_count += 1
         self.count[0][1] = unk_count
 
-        with open(path + '.pickle', "wb") as f:
-            pickle.dump(self.count, f)
-
-    def initialize_and_save_idf(self, documents, path):
+    def initialize_idf(self, documents):
         """Generates a idf table for every word in the
         vocabulary by iterating over the document iterator
         'documents'. Requires the vocabulary to be loaded.
@@ -56,37 +58,23 @@ class Vocabulary():
         self.idf = {e[0]: math.log((num_docs+1) / (e[1]+1)) for e in doc_freq}
         self.idf['UNK'] = 0.0 # unknown token has idf of 0
 
-        with open(path + '_idf.pickle', "wb") as f:
-            pickle.dump(self.idf, f)
+    def vocab_size(self):
+        return len(self.count)
 
-    def load_idf(self, path):
-        """Loads idf table. The vocabulary should already
-        be loaded for this to be of any use.
-        """
-        with open(path + '_idf.pickle', 'rb') as f:
-            self.idf = pickle.load(f)
-
-    def load_vocab(self, path):
+    def load(self, count):
         """Load vocabulary and perform initialization
         of the sample table.
         """
-        with open(path + '.pickle', 'rb') as f:
-            self.count = pickle.load(f)
-            self.vocab_words = {vocab_word[0]: idx for idx, vocab_word in enumerate(self.count)}
-            self.vocabulary_size = len(self.count)
+        self.count = count
+        self.vocab_words = {vocab_word[0]: idx for idx, vocab_word in enumerate(self.count)}
 
-    def load(self, path):
-        """Load everything.
-        """
-        self.load_vocab(path)
-        self.load_idf(path)
+    def load_idf(self, idf):
+        self.idf = idf
 
     def load_from_dict(self, word_dict):
         """Load vocabulary from the dictionary of
         words and embeddings.
         """
-        self.vocabulary_size = len(word_dict) + 1 # +1 for UNK token
-
         idx_dict = {0: np.zeros(300)}
         self.vocab_words['UNK'] = 0
         for i, word in enumerate(word_dict.items()):
@@ -129,54 +117,65 @@ class Vocabulary():
     def get_count(self):
         return self.count
 
+    def get_idf(self):
+        return self.idf
+
 
 class FastTextVocabulary(Vocabulary):
-    def __init__(self, vocabulary_size=50000):
-        super().__init__(vocabulary_size)
+    def __init__(self, **kwargs):
+        """Initialize vocabulary. There are two options for this:
+        Either initialize a vocabulary from documents by passing
+        max_vocab_size, max_ngram_size, max_ngram, documents and 
+        vocabulary path arguments, or by passing a saved vocabulary 
+        to load.
+        """
+        if 'count' not in kwargs.keys():
+            self.max_ngram_size = kwargs['max_ngram_size']
+        elif 'vocab_dict' in kwargs:
+            raise ValueError('Pretrained embeddings for fasttext not implemented')
 
-    def initialize_and_save_vocab(self, documents, path):
+        self.max_ngram = kwargs['max_ngram']
+        super().__init__(**kwargs)
+
+    def initialize_vocab(self, documents, max_vocab_size):
         """Initializes vocabulary from the sentences iterated by
         documents. 
         """
         words = chain.from_iterable(chain.from_iterable(documents))
-        ngrams = chain.from_iterable((split_to_ngrams(word) for word in words))
 
         self.count = [['UNK', -1]]
-        self.count.extend(collections.Counter(ngrams).most_common(self.vocabulary_size - 1))
+
+        # first, add words to the vocabulary, then add ngrams
+        self.count.extend(collections.Counter(words).most_common(max_vocab_size - 1))
+
+        words = chain.from_iterable(chain.from_iterable(documents))
+        ngrams = chain.from_iterable((split_to_ngrams(word, max_ngram=self.max_ngram) for word in words))
+        self.count.extend(collections.Counter(ngrams).most_common(self.max_ngram_size - 1))
+
         self.vocab_words = dict()
         for i, word_freq in enumerate(self.count):
             self.vocab_words[word_freq[0]] = i
         unk_count = 0
-        words = chain.from_iterable(chain.from_iterable(documents))
-        ngrams = chain.from_iterable((split_to_ngrams(word) for word in words))
 
-        for ngram in ngrams:
-            if ngram not in self.vocab_words:
+        words = chain.from_iterable(chain.from_iterable(documents))
+        ngrams = chain.from_iterable((split_to_ngrams(word, max_ngram=self.max_ngram) for word in words))
+
+        for word in words:
+            if word not in self.vocab_words:
                 unk_count += 1
         self.count[0][1] = unk_count
 
-        with open(path + '_fasttext.pickle', "wb") as f:
-            pickle.dump(self.count, f)
+    def initialize_idf(self, documents):
+        raise NotImplementedError('tf-idf weights for fasttext documents are not supported')
 
-    def load_vocab(self, path):
-        super().load_vocab(path + '_fasttext')
-
-    def initialize_and_save_idf(self, documents, path):
-        """We save idf frequency for whole words instead of
-        subword ngrams. This makes sense due to the fact that 
-        we weight the word vectors after averaging of the subword
-        structures.
-        """
-        super().initialize_and_save_idf(documents, path + '_fasttext')
-
-    def load_idf(self, path):
-        super().load_idf(path + '_fasttext')
+    def load_idf(self, idf):
+        raise NotImplementedError('tf-idf weights for fasttext documents are not supported')
 
     def get_indices(self, word):
         """Returns word indices (for all ngrams) or 0 (for UNK token) 
         if word is not in dictionary.
         """
-        ngrams = split_to_ngrams(word)
+        ngrams = split_to_ngrams(word, self.max_ngram)
         indices = [self.vocab_words.get(ngram) for ngram in ngrams]
         indices = [0 if idx is None else idx for idx in indices]
         return indices

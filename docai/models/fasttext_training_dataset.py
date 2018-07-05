@@ -19,7 +19,7 @@ class FastTextTrainingDataset():
 
         # word containing lagest number of ngrams for padding
         # if a word contains more ngrams, they will be cut
-        self.longest_word = 50 
+        self.longest_word = self.vocab.max_ngram 
 
         self.train_data = self.initialize_training_data(documents)
         self.train_data = [sent for sent in self.train_data if len(sent) > 1] # only longer sentences are relevant
@@ -94,11 +94,8 @@ class FastTextTrainingDataset():
         indexed_sentence = []
         for word in sentence:
             indexed_ngrams = []
-            ngrams = split_to_ngrams(word)
-            if len(ngrams) > self.longest_word:
-                ngrams = ngrams[:50]
-            else:
-                ngrams = self.pad_ngrams(ngrams, self.longest_word)
+            ngrams = split_to_ngrams(word, max_ngram=self.longest_word)
+            ngrams = self.pad_ngrams(ngrams, self.longest_word)
             
             for ngram in ngrams:
                 indexed_ngrams.append(self.vocab.get_index(ngram))

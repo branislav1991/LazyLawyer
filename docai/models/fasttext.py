@@ -68,15 +68,13 @@ class FastTextSkipgram(nn.Module):
         return -1*loss.sum()/batch_size
 
 class FastText:
-    def __init__(self, vocabulary, embedding_dim=200):
+    def __init__(self, vocabulary, embedding_dim):
         """Initializes the model.
         """
         print('Initializing FastText...')
         self.vocab = vocabulary
         self.embedding_dim = embedding_dim
-
-        # initialize dataset and model 
-        self.model = FastTextSkipgram(self.vocab.vocabulary_size, embedding_dim)
+        self.model = FastTextSkipgram(self.vocab.vocab_size(), self.embedding_dim)
 
         if torch.cuda.is_available() and torch.cuda.get_device_capability(0)[0] > 4:
             self.model.cuda()
@@ -84,9 +82,9 @@ class FastText:
     def load(self, path):
         """Loads the last model weights.
         """
-        folder, _ = os.path.split(path)
+        folder, name = os.path.split(path)
         paths = os.listdir(folder)
-        paths = [x for x in paths if x.startswith('fasttext_epoch')]
+        paths = [x for x in paths if x.startswith(name + '_epoch')]
         model_save = torch.load(os.path.join(folder, paths[-1]))
         self.model.load_state_dict(model_save)
     
@@ -103,13 +101,12 @@ class FastText:
         """Return embedding vector for a document.
         Input params:
         doc: document for which to get embedding.
-        strategy: average word embedding or weight with
-        tf-idf weights.
+        strategy: only 'average' supported for fasttext.
         embedding: either 'input' or 'output'.
         """
-        strategies = ['average', 'tf-idf']
+        strategies = ['average']
         if strategy not in strategies:
-            raise ValueError('strategy has to be either "average" or "tf-idf"')
+            raise ValueError('strategy has to be "average"')
 
         doc = list(chain.from_iterable(doc))
         if len(doc) < 1:
@@ -119,19 +116,14 @@ class FastText:
         if strategy == 'average':
             emb = [self.get_embedding_word(w, embedding) for w in doc]
 
-        else: # tf-idf
-            tf = self.vocab.get_tfidf_weights(doc)
-            words = [w if tf.get(w) else 'UNK' for w in doc] # replace unknown words by UNK token
-            emb = [tf[w] * self.get_embedding_word(w, embedding) for w in words]
-
         emb = np.mean(emb, axis=0)
         return emb
 
-    def train(self, documents, model_save_path, epoch_num=10, batch_size=16, window_size=2,neg_sample_num=10):
+    def train(self, documents, model_save_path, epoch_num, batch_size, window_size, neg_sample_num, learning_rate):
         dataset = FastTextTrainingDataset(documents, self.vocab, 
             window_size, batch_size, neg_sample_num)
 
-        optimizer = optim.SGD(self.model.parameters(),lr=0.2)
+        optimizer = optim.SGD(self.model.parameters(),lr=learning_rate)
         for epoch in range(epoch_num):
             batch_num = 0
 
@@ -154,7 +146,7 @@ class FastText:
                 loss.backward()
                 optimizer.step()
 
-                if batch_num%30000 == 0:
+                if batch_num%300000 == 0:
                     torch.save(self.model.state_dict(), model_save_path + '_epoch{}.batch{}.pickle'.format(epoch,batch_num))
 
                 batch_num = batch_num + 1 
