@@ -22,10 +22,9 @@ def split_to_ngrams(word, n_min=3, n_max=6, max_ngram=10):
     max_ngram specifies the maximal number of ngrams that
     are generated.
     """
-    word_ngrams = [word]
+    word = add_special_tags(word)
 
-    # add special characters for beginning and end of the word
-    word = '*' + word + '*'
+    word_ngrams = [word]
     if len(word) > n_min:
         for n in range(n_min, n_max+1):
             ngrams = [word[i:i+n] for i in range(0, len(word)-n+1)]
@@ -34,3 +33,10 @@ def split_to_ngrams(word, n_min=3, n_max=6, max_ngram=10):
         word_ngrams = word_ngrams[:max_ngram]
 
     return word_ngrams
+
+def add_special_tags(word):
+    """Returns the word including special tags to
+    distinguish between fasttext words and fasttext
+    ngrams.
+    """
+    return '<' + word + '>'

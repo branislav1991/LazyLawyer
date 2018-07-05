@@ -1,5 +1,5 @@
 import collections
-from docai.nlp.helpers import split_to_ngrams
+from docai.nlp.helpers import split_to_ngrams, add_special_tags
 from itertools import chain
 import math
 import numpy as np
@@ -142,6 +142,7 @@ class FastTextVocabulary(Vocabulary):
         documents. 
         """
         words = chain.from_iterable(chain.from_iterable(documents))
+        words = (add_special_tags(w) for w in words)
 
         self.count = [['UNK', -1]]
 
@@ -149,7 +150,7 @@ class FastTextVocabulary(Vocabulary):
         self.count.extend(collections.Counter(words).most_common(max_vocab_size - 1))
 
         words = chain.from_iterable(chain.from_iterable(documents))
-        ngrams = chain.from_iterable((split_to_ngrams(word, max_ngram=self.max_ngram) for word in words))
+        ngrams = chain.from_iterable((split_to_ngrams(word, max_ngram=self.max_ngram)[1:] for word in words))
         self.count.extend(collections.Counter(ngrams).most_common(self.max_ngram_size - 1))
 
         self.vocab_words = dict()
@@ -158,7 +159,6 @@ class FastTextVocabulary(Vocabulary):
         unk_count = 0
 
         words = chain.from_iterable(chain.from_iterable(documents))
-        ngrams = chain.from_iterable((split_to_ngrams(word, max_ngram=self.max_ngram) for word in words))
 
         for word in words:
             if word not in self.vocab_words:
