@@ -1,3 +1,4 @@
+from itertools import chain
 import numpy as np
 
 def combine_split_result(s):
@@ -40,3 +41,27 @@ def add_special_tags(word):
     ngrams.
     """
     return '<' + word + '>'
+
+def get_embedding_doc(content, model):
+    """Obtains embedding for the whole document.
+    Uses the dictionary built-in the model.
+    """
+    embed = np.zeros((model.vector_size))
+    words = chain.from_iterable(content)
+    words = filter(lambda x: x in model.wv.vocab, words)
+    for word in words:
+        embed = embed + model.wv[word]
+    return embed
+
+def cosine_similarity(a, b):
+        """Takes 2 vectors a, b and returns the cosine similarity according 
+        to the definition of the dot product
+        """
+        dot_product = np.dot(a, b)
+        norm_a = np.linalg.norm(a)
+        norm_b = np.linalg.norm(b)
+
+        if np.isclose(norm_a, 0) or np.isclose(norm_b, 0):
+            return 0
+        else:
+            return dot_product / (norm_a * norm_b)

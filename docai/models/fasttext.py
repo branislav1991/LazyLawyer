@@ -1,5 +1,5 @@
 from itertools import chain
-from docai.models.word2vec import cosine_similarity
+from docai.nlp.helpers import cosine_similarity
 from docai.models.fasttext_training_dataset import FastTextTrainingDataset
 import numpy as np
 import os

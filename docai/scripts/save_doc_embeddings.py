@@ -1,18 +1,15 @@
 import argparse
 from docai.database import table_docs
 from docai.content_generator import ContentGenerator
-from docai.models.word2vec import Word2Vec
-from docai.models.fasttext import FastText
-from docai.models.load_word2vec_binary import load_word2vec_binary
-from docai.models.vocabulary import Vocabulary, FastTextVocabulary
+from docai.nlp.helpers import get_embedding_doc
 from docai import helpers
+import gensim
 import os
 import pickle
 
-def save_doc_embeddings(file_name, vocabulary, model, strategy='average'):
+def save_doc_embeddings(file_name, model):
     """Saves document embeddings in a file
-    using the provided model and vocabulary. This function requires that the model
-    supports the get_embedding_doc interface.
+    using the provided model.
     """
     docs = table_docs.get_docs_with_names(['Judgment'])
     content_gen = ContentGenerator(docs)
@@ -21,74 +18,39 @@ def save_doc_embeddings(file_name, vocabulary, model, strategy='average'):
     embs = []
 
     for doc, content in zip(docs, content_gen):
-        emb = model.get_embedding_doc(content, strategy=strategy)
+        emb = get_embedding_doc(content, model)
         embs.append({'doc_id': doc['id'], 'emb': emb})
 
     with open(os.path.join('saved_embeddings', file_name), 'wb') as f:
         pickle.dump(embs, f)
 
-def save_word2vec_pretrained_curia(num_words):
-    # load pretrained model from Google word2vec embeddings
+def save_word2vec_curia(model_path, num_words):
+    # load pretrained model
     print('Loading pretrained binary file...')
-    model_path = os.path.join('trained_models', helpers.setup_json['googlenews_word2vec_path'])
-    word_dict = load_word2vec_binary(model_path, max_vectors=num_words)
-
-    print('Creating vocabulary...')
-    vocabulary = Vocabulary()
-    idx_dict = vocabulary.load_from_dict(word_dict)
-
-    print('Loading model...')
-    model = Word2Vec(vocabulary, embedding_dim=300)
-    model.load_from_dict(idx_dict)
+    model_path = os.path.join('trained_models', model_path)
+    model = gensim.models.KeyedVectors.load_word2vec_format(model_path, binary=True, limit=num_words)
 
     print('Saving document embeddings...')
-    save_doc_embeddings('word2vec_pretrained.pickle', vocabulary, model)
+    save_doc_embeddings('word2vec.pickle', model)
 
-def save_word2vec_curia():
-    model_path = os.path.join('trained_models', helpers.setup_json['word2vec_path'])
-    meta_path = model_path + '_meta.pickle'
-
-    print('Loading metainfo...')
-    with open(meta_path, 'rb') as f:
-        meta_info = pickle.load(f)
-
-    vocabulary = Vocabulary(count=meta_info['word_count'])
-    vocabulary.load_idf(meta_info['idf'])
-
-    print('Loading model...')
-    model = Word2Vec(vocabulary, meta_info['embedding_dim'])
-    model.load(model_path)
+def save_fasttext_curia(model_path):
+    # load pretrained model
+    print('Loading pretrained binary file...')
+    model_path = os.path.join('trained_models', model_path)
+    model = gensim.models.FastText.load(model_path)
 
     print('Saving document embeddings...')
-    save_doc_embeddings('word2vec.pickle', vocabulary, model)
-
-def save_fasttext_curia():
-    model_path = os.path.join('trained_models', helpers.setup_json['fasttext_path'])
-    meta_path = model_path + '_meta.pickle'
-
-    print('Loading metainfo...')
-    with open(meta_path, 'rb') as f:
-        meta_info = pickle.load(f)
-
-    vocabulary = FastTextVocabulary(count=meta_info['word_count'], max_ngram=meta_info['max_ngram'])
-
-    print('Loading model...')
-    model = FastText(vocabulary, meta_info['embedding_dim'])
-    model.load(model_path)
-
-    print('Saving document embeddings...')
-    save_doc_embeddings('fasttext.pickle', vocabulary, model)
+    save_doc_embeddings('fasttext.pickle', model)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Save document embeddings using a certain model')
-    parser.add_argument('model', choices=['word2vec', 'word2vec_pretrained', 'fasttext'], default='word2vec', help='which model should be used')
-    parser.add_argument('--num_words', type=int, default=100000, help='size of the vocabulary for pretrained embeddings')
+    parser.add_argument('model', choices=['word2vec', 'fasttext'], help='model for doc embeddings')
+    parser.add_argument('model_path', help='model path')
+    parser.add_argument('--num_words', type=int, default=100000, help='max vocabulary size for word2vec')
 
     args = parser.parse_args()
 
-    if args.model == 'word2vec_pretrained':
-        save_word2vec_pretrained_curia(args.num_words)
-    elif args.model == 'word2vec':
-        save_word2vec_curia()
+    if args.model == 'word2vec':
+        save_word2vec_curia(args.model_path, args.num_words)
     elif args.model == 'fasttext':
-        save_fasttext_curia()
+        save_fasttext_curia(args.model_path, args.num_words)
