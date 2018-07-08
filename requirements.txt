@@ -1,5 +1,5 @@
 beautifulsoup4==4.6.0
-cython=0.28.3
+cython==0.28.3
 gensim==3.4.0
 luigi==2.7.5
 matplotlib==2.2.2
