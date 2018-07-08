@@ -37,7 +37,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Launch flask web app.')
     parser.add_argument('model', choices=['word2vec', 'fasttext'], help='model for doc embeddings')
     parser.add_argument('model_path', help='model path')
-    parser.add_argument('--num_words', type=int, default=100000, help='vocabulary size')
+    parser.add_argument('--num_words', type=int, default=1000000, help='vocabulary size')
 
     args = parser.parse_args()
 
