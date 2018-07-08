@@ -46,11 +46,11 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Save document embeddings using a certain model')
     parser.add_argument('model', choices=['word2vec', 'fasttext'], help='model for doc embeddings')
     parser.add_argument('model_path', help='model path')
-    parser.add_argument('--num_words', type=int, default=100000, help='max vocabulary size for word2vec')
+    parser.add_argument('--num_words', type=int, default=1000000, help='max vocabulary size for word2vec')
 
     args = parser.parse_args()
 
     if args.model == 'word2vec':
         save_word2vec_curia(args.model_path, args.num_words)
     elif args.model == 'fasttext':
-        save_fasttext_curia(args.model_path, args.num_words)
+        save_fasttext_curia(args.model_path)
