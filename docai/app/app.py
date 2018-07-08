@@ -35,7 +35,7 @@ def search():
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Launch flask web app.')
-    parser.add_argument('model', choices=['word2vec', 'fasttext'], help='model for doc embeddings')
+    parser.add_argument('model', choices=['word2vec', 'fasttext', 'fasttext_pretrained'], help='model for doc embeddings')
     parser.add_argument('model_path', help='model path')
     parser.add_argument('--num_words', type=int, default=1000000, help='vocabulary size')
 
@@ -45,11 +45,14 @@ if __name__ == '__main__':
         print('Loading pretrained binary file...')
         model_path = os.path.join('trained_models', args.model_path)
         model = gensim.models.KeyedVectors.load_word2vec_format(model_path, binary=True, limit=args.num_words)
-        
     elif args.model == 'fasttext':
         print('Loading pretrained model...')
         model_path = os.path.join('trained_models', args.model_path)
         model = gensim.models.FastText.load(model_path)
+    elif args.model == 'fasttext_pretrained':
+        print('Loading pretrained model...')
+        model_path = os.path.join('trained_models', args.model_path)
+        model = gensim.models.FastText.load_fasttext_format(model_path)
 
     print('Loading documents...')
     docs = table_docs.get_docs_with_names(['Judgment'])

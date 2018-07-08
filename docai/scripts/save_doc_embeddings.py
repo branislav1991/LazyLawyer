@@ -33,18 +33,22 @@ def save_word2vec_curia(model_path, num_words):
     print('Saving document embeddings...')
     save_doc_embeddings('word2vec.pickle', model)
 
-def save_fasttext_curia(model_path):
+def save_fasttext_curia(model_path, pretrained):
     # load pretrained model
     print('Loading pretrained binary file...')
     model_path = os.path.join('trained_models', model_path)
-    model = gensim.models.FastText.load(model_path)
+
+    if pretrained == False:
+        model = gensim.models.FastText.load(model_path)
+    else:
+        model = gensim.models.FastText.load_fasttext_format(model_path)
 
     print('Saving document embeddings...')
     save_doc_embeddings('fasttext.pickle', model)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Save document embeddings using a certain model')
-    parser.add_argument('model', choices=['word2vec', 'fasttext'], help='model for doc embeddings')
+    parser.add_argument('model', choices=['word2vec', 'fasttext', 'fasttext_pretrained'], help='model for doc embeddings')
     parser.add_argument('model_path', help='model path')
     parser.add_argument('--num_words', type=int, default=1000000, help='max vocabulary size for word2vec')
 
@@ -53,4 +57,6 @@ if __name__ == '__main__':
     if args.model == 'word2vec':
         save_word2vec_curia(args.model_path, args.num_words)
     elif args.model == 'fasttext':
-        save_fasttext_curia(args.model_path)
+        save_fasttext_curia(args.model_path, pretrained=False)
+    elif args.model == 'fasttext_pretrained':
+        save_fasttext_curia(args.model_path, pretrained=True)
