@@ -43,10 +43,24 @@ def get_case_for_doc(doc):
     else:
         return db._convert_to_cases_dict([rows])[0]
 
-def update_category(case, category):
+def update_subject(case, subject):
+    """Updates the subject of the case.
+    Subject is a text field.
+    """
+    s = """UPDATE cases SET subject=? WHERE id=?"""
+    result = db.cursor.execute(s, (subject, case['id']))
+    db.connection.commit()
+
+def update_parties(case, party1, party2):
     """Updates the category of the case.
     Category is a text field.
     """
-    s = """UPDATE cases SET category=? WHERE id=?"""
-    result = db.cursor.execute(s, (category, case['id']))
-    db.connection.commit()
+    if party1 is not None:
+        s = """UPDATE cases SET party1=? WHERE id=?"""
+        result = db.cursor.execute(s, (party1, case['id']))
+        db.connection.commit()
+
+    if party2 is not None:
+        s = """UPDATE cases SET party2=? WHERE id=?"""
+        result = db.cursor.execute(s, (party2, case['id']))
+        db.connection.commit()

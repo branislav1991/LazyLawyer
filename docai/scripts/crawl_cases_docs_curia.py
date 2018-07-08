@@ -26,6 +26,7 @@ def crawl_cases_docs_curia(crawl_docs_only=False, num_cases=-1):
     else:
         cases, appeals = crawler.crawl_ecj_cases(num_cases)
         table_cases.write_cases(cases)
+        cases = table_cases.get_all_cases() # obtain cases once more to get ids
 
         # convert appeal case names to numbers
         for appeal in appeals:
@@ -48,6 +49,13 @@ def crawl_cases_docs_curia(crawl_docs_only=False, num_cases=-1):
             case = futures_cases[future]
             docs = future.result()
             if docs is not None:
+                # insert parties to cases table
+                table_cases.update_parties(case, docs[0]['party1'], docs[0]['party2'])
+                table_cases.update_subject(case, docs[0]['subject'])
+                for doc in docs:
+                    doc.pop('party1')
+                    doc.pop('party2')
+                    doc.pop('subject')
                 table_docs.write_docs_for_case(case, docs)
 
 if __name__ == '__main__':

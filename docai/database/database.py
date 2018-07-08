@@ -117,14 +117,14 @@ def batch_insert_check(table, vals, attrs, batch_size=100):
 
 def _convert_to_cases_dict(db_rows):
     cases = [{'id': x[0], 'name': x[1], 'desc': x[2],
-        'url': x[3], 'protocol': x[4], 'court': x[5], 'category': x[6]} for x in db_rows]
+        'url': x[3], 'protocol': x[4], 'court': x[5], 'subject': x[6],
+        'party1': x[7], 'party2': x[8]} for x in db_rows]
     return cases
 
 def _convert_to_docs_dict(db_rows):
     docs = [{'id': x[0], 'case_id': x[1], 'name': x[2], 'ecli': x[3], 'date': x[4],
-            'parties': x[5], 'subject': x[6], 'link': x[7],
-            'source': x[8], 'format': x[9], 'content_id': x[10],
-            'download_error': x[11], 'embedding': x[12], 'keywords': x[13]} for x in db_rows]
+            'link': x[5], 'source': x[6], 'format': x[7], 'content_id': x[8],
+            'download_error': x[9], 'embedding': x[10], 'keywords': x[11]} for x in db_rows]
     return docs
 
 def _convert_to_appeals_dict(db_rows):
@@ -145,7 +145,9 @@ def create_tables(remove_old=False):
         url TEXT NOT NULL,
         protocol TEXT NOT NULL,
         court TEXT,
-        category TEXT,
+        subject TEXT,
+        party1 TEXT,
+        party2 TEXT,
         CHECK (court IN ("COJ", "GC"))
         )""") 
     cursor.execute("""CREATE TABLE IF NOT EXISTS docs(
@@ -154,8 +156,6 @@ def create_tables(remove_old=False):
         name TEXT,
         ecli TEXT,
         date TEXT, 
-        parties TEXT,
-        subject TEXT,
         link TEXT,
         source TEXT,
         format TEXT,

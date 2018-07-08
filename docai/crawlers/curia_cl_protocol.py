@@ -2,6 +2,7 @@ from contextlib import suppress
 import docai.helpers
 import docai.crawlers.helpers
 import itertools
+import re
 
 def _link_to_image(imgs_list):
     try:
@@ -20,8 +21,15 @@ def _crawl_doc(html_tr, formats):
     ecli = None if ecli is None else ecli.text
     date = html_tr.find('td', {'class': 'table_cell_date'})
     date = None if date is None else date.text
-    parties = html_tr.find('td', {'class': 'table_cell_nom_usuel'})
-    parties = None if parties is None else parties.text
+    party1 = html_tr.find('td', {'class': 'table_cell_nom_usuel'})
+    party1 = None if party1 is None else party1.text.strip()
+    party2 = None
+    if party1 is not None:
+        parties = re.match(r'(.*) v (.*)', party1)
+        if parties and parties.group(1) and parties.group(2):
+            party1 = parties.group(1)
+            party2 = parties.group(2)
+
     subject = html_tr.find('td', {'class': 'table_cell_links_curia'}).find('span', {'class': 'tooltipLink'})
     subject = None if subject is None else subject.text
 
@@ -64,7 +72,7 @@ def _crawl_doc(html_tr, formats):
             break
 
     return {'name': name, 'ecli': ecli, 'date': date, 
-        'parties': parties, 'subject': subject, 'link': link,
+        'party1': party1, 'party2': party2, 'subject': subject, 'link': link,
         'source': source, 'format': format}
 
 def crawl_cases(html):
