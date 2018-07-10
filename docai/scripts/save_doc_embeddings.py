@@ -20,7 +20,7 @@ def save_doc_embeddings_word2vec(file_name, model):
     embs = []
 
     for doc, content in zip(docs, content_gen):
-        emb = get_embedding_doc_word2vec(content, model)
+        emb = get_embedding_doc_word2vec(content, model, stopword_removal=True)
         embs.append({'doc_id': doc['id'], 'emb': emb})
 
     with open(os.path.join('saved_embeddings', file_name), 'wb') as f:

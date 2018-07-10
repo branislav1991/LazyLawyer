@@ -37,7 +37,7 @@ def search():
 
         query_emb = get_embedding_doc_lsi(list(chain.from_iterable(search_query)), model, dictionary, tfidf)
     else:
-        query_emb = get_embedding_doc_word2vec(search_query, model)
+        query_emb = get_embedding_doc_word2vec(search_query, model, stopword_removal=True)
 
     similarities = [cosine_similarity(query_emb, pickle.loads(doc['embedding'])) for doc in docs]
 

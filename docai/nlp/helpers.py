@@ -1,3 +1,4 @@
+from gensim.parsing.preprocessing import remove_stopwords
 from itertools import chain
 import numpy as np
 
@@ -51,14 +52,22 @@ def get_embedding_doc_lsi(content, model, dictionary, tfidf):
     embed = np.asarray(model[content_tfidf])
     return embed[:,1]
 
-def get_embedding_doc_word2vec(content, model):
+def get_embedding_doc_word2vec(content, model, stopword_removal):
     """Obtains embedding for the whole document.
     Uses the dictionary built-in the model. Works 
     with word2vec and fasttext models.
+    Input params:
+    content: document content.
+    model: latent vector model.
+    stopword_removal: whether to remove stopwords from the calculation.
     """
     embed = np.zeros((model.vector_size))
     words = chain.from_iterable(content)
     words = filter(lambda x: x in model.wv.vocab, words)
+
+    if stopword_removal:
+        words = remove_stopwords(' '.join(words)).split()
+
     for word in words:
         embed = embed + model.wv[word]
     return embed
