@@ -1,15 +1,17 @@
 import argparse
 from docai.database import table_docs
 from docai.content_generator import ContentGenerator
-from docai.nlp.helpers import get_embedding_doc
+from docai.nlp.helpers import get_embedding_doc_word2vec
+from docai.nlp.helpers import get_embedding_doc_lsi
 from docai import helpers
 import gensim
+from itertools import chain
 import os
 import pickle
 
-def save_doc_embeddings(file_name, model):
+def save_doc_embeddings_word2vec(file_name, model):
     """Saves document embeddings in a file
-    using the provided model.
+    using the provided word2vec or fasttext model.
     """
     docs = table_docs.get_docs_with_names(['Judgment'])
     content_gen = ContentGenerator(docs)
@@ -18,7 +20,25 @@ def save_doc_embeddings(file_name, model):
     embs = []
 
     for doc, content in zip(docs, content_gen):
-        emb = get_embedding_doc(content, model)
+        emb = get_embedding_doc_word2vec(content, model)
+        embs.append({'doc_id': doc['id'], 'emb': emb})
+
+    with open(os.path.join('saved_embeddings', file_name), 'wb') as f:
+        pickle.dump(embs, f)
+
+def save_doc_embeddings_lsi(file_name, model, dictionary, tfidf):
+    """Saves document embeddings in a file
+    using the provided lsi model.
+    """
+    docs = table_docs.get_docs_with_names(['Judgment'])
+    content_gen = ContentGenerator(docs)
+    contents = [list(chain.from_iterable(content)) for content in content_gen]
+
+    helpers.create_folder_if_not_exists('saved_embeddings')
+    embs = []
+
+    for doc, content in zip(docs, contents):
+        emb = get_embedding_doc_lsi(content, model, dictionary, tfidf)
         embs.append({'doc_id': doc['id'], 'emb': emb})
 
     with open(os.path.join('saved_embeddings', file_name), 'wb') as f:
@@ -31,7 +51,7 @@ def save_word2vec_curia(model_path, num_words):
     model = gensim.models.KeyedVectors.load_word2vec_format(model_path, binary=True, limit=num_words)
 
     print('Saving document embeddings...')
-    save_doc_embeddings('word2vec.pickle', model)
+    save_doc_embeddings_word2vec('word2vec.pickle', model)
 
 def save_fasttext_curia(model_path, pretrained):
     # load pretrained model
@@ -44,11 +64,22 @@ def save_fasttext_curia(model_path, pretrained):
         model = gensim.models.FastText.load_fasttext_format(model_path)
 
     print('Saving document embeddings...')
-    save_doc_embeddings('fasttext.pickle', model)
+    save_doc_embeddings_word2vec('fasttext.pickle', model)
+
+def save_lsi_curia(model_path):
+    # load pretrained model
+    print('Loading pretrained binary file...')
+    model_path = os.path.join('trained_models', model_path)
+    model = gensim.models.LsiModel.load(model_path)
+    dictionary = gensim.corpora.Dictionary.load(os.path.splitext(model_path)[0] + '_dict.bin')
+    tfidf = gensim.models.TfidfModel.load(os.path.splitext(model_path)[0] + '_tfidf.bin')
+
+    print('Saving document embeddings...')
+    save_doc_embeddings_lsi('lsi.pickle', model, dictionary, tfidf)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Save document embeddings using a certain model')
-    parser.add_argument('model', choices=['word2vec', 'fasttext', 'fasttext_pretrained'], help='model for doc embeddings')
+    parser.add_argument('model', choices=['word2vec', 'fasttext', 'fasttext_pretrained', 'lsi'], help='model for doc embeddings')
     parser.add_argument('model_path', help='model path')
     parser.add_argument('--num_words', type=int, default=1000000, help='max vocabulary size for word2vec')
 
@@ -60,3 +91,5 @@ if __name__ == '__main__':
         save_fasttext_curia(args.model_path, pretrained=False)
     elif args.model == 'fasttext_pretrained':
         save_fasttext_curia(args.model_path, pretrained=True)
+    elif args.model == 'lsi':
+        save_lsi_curia(args.model_path)

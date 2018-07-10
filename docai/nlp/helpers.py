@@ -42,9 +42,19 @@ def add_special_tags(word):
     """
     return '<' + word + '>'
 
-def get_embedding_doc(content, model):
+def get_embedding_doc_lsi(content, model, dictionary, tfidf):
+    """Obtains embedding for the document.
+    Works with LSI models.
+    """
+    content_dict = dictionary.doc2bow(content)
+    content_tfidf = tfidf[content_dict]
+    embed = np.asarray(model[content_tfidf])
+    return embed[:,1]
+
+def get_embedding_doc_word2vec(content, model):
     """Obtains embedding for the whole document.
-    Uses the dictionary built-in the model.
+    Uses the dictionary built-in the model. Works 
+    with word2vec and fasttext models.
     """
     embed = np.zeros((model.vector_size))
     words = chain.from_iterable(content)
