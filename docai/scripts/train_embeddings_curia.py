@@ -1,7 +1,13 @@
+# Generates search indices for all documents in the database. This includes:
+# - training document embeddings using their content and a specified model,
+# - training a vocabulary for document metadata such as subject,
+# parties and keywords.
+
 import argparse
-from docai.database import table_docs
+from docai.database import table_docs, table_cases
 from docai.content_generator import ContentGenerator
 from docai import helpers
+from docai.nlp.curia_preprocessor import tokenize_and_process_metadata
 from docai.scripts.save_doc_embeddings import save_doc_embeddings_word2vec
 from docai.scripts.save_doc_embeddings import save_doc_embeddings_lsi
 import gensim
@@ -73,6 +79,24 @@ def train_lsi_curia(embedding_dim):
     print('Saving document embeddings...')
     save_doc_embeddings_lsi('lsi.pickle', model, dictionary, tfidf)
 
+def train_metadata_vocabulary_curia():
+    print("Initializing database and loading documents...")
+    docs = table_docs.get_docs_with_names(['Judgment'])
+    cases = [table_cases.get_case_for_doc(doc) for doc in docs]
+
+    keywords = [doc['keywords'] for doc in docs]
+    parties_subjects = [[case['party1'], case['party2'], case['subject']] for case in cases]
+
+    helpers.create_folder_if_not_exists('trained_models')
+    metadata_path = os.path.join('trained_models', helpers.setup_json['metadata_path'])
+
+    all_words = keywords + list(chain.from_iterable(parties_subjects))
+    all_words = tokenize_and_process_metadata(all_words)
+
+    print('Initializing and training model...')
+    dictionary = gensim.corpora.Dictionary([all_words])
+    dictionary.save(metadata_path)
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Train word2vec model on CURIA documents')
     parser.add_argument('--model', choices=['word2vec', 'fasttext', 'lsi'], default='word2vec', help='which model should be trained')
@@ -90,3 +114,6 @@ if __name__ == '__main__':
         train_lsi_curia(args.embedding_dim)
     else:
         raise ValueError('Invalid model name')
+        
+    # also train a vocabulary for all subjects, parties and keywords
+    train_metadata_vocabulary_curia()

@@ -1,11 +1,26 @@
 from docai import helpers
 from docai.nlp.helpers import combine_split_result
+from gensim.parsing.preprocessing import remove_stopwords
 from itertools import chain
 import re
+import string
 import warnings
-#import Stemmer
 
-#stemmer = Stemmer.Stemmer('english')
+def tokenize_and_process_metadata(metadata):
+    """Tokenizes and processes metadata like keywords, subjects and parties.
+    Input params:
+    metadata: list of expressions to be tokenized
+    """
+    tokens = filter(lambda x: x is not None, metadata)
+    tokens = [t.split(' ') for t in tokens]
+    tokens = list(chain.from_iterable(tokens))
+    table = str.maketrans('', '', string.punctuation)
+    tokens = [t.translate(table) for t in tokens]
+
+    tokens = [word.lower() for word in tokens]
+    tokens = [remove_stopwords(t) for t in tokens]
+    tokens = list(filter(lambda x: x != '', tokens))
+    return tokens
 
 def extract_keywords(doc):
     """Extracts keywords which are usually located on top of the judgment.
@@ -63,6 +78,5 @@ def preprocess(doc_content):
 
     doc_content = [tokenize(sent) for sent in doc_content]
     doc_content = [sent for sent in doc_content if len(sent) > 0] # remove empty phrases
-    #doc_content = [stemmer.stemWords(sent) for sent in doc_content] # do not stem
     
     return doc_content

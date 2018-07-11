@@ -4,6 +4,7 @@
     "fasttext_path": "fasttext.bin",
     "lsi_path": "lsi.bin",
     "googlenews_word2vec_path": "GoogleNews-vectors-negative300.bin",
+    "metadata_path": "metadata.bin",
     "subject_classifier_path": "sc.pickle",
     "subject_classifier_labels_path": "sc_labels.pickle",
     "eu_case_law_links": [
