@@ -1,0 +1,12 @@
+stages:
+  - test
+
+test:
+  image: python:3.6
+  script:
+  - apt-get update -y
+  - apt-get -y --reinstall install ghostscript
+  - apt-get -y --reinstall install tesseract-ocr
+  - apt-get install -y python-dev python-pip
+  - pip install -q -r requirements.txt
+  - python -m pytest
