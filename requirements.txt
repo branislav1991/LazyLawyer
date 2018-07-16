@@ -11,6 +11,6 @@ pytest>=3.6.1
 requests>=2.18.4
 scipy>=1.0.1
 scikit-learn>=0.19.1
-http://download.pytorch.org/whl/cu91/torch-0.4.0-cp36-cp36m-win_amd64.whl
+torch>=0.4.0
 torchvision
 tqdm>=4.23.1
