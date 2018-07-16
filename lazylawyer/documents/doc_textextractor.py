@@ -1,5 +1,6 @@
 from bs4 import BeautifulSoup
 import os
+import re
 import subprocess
 import time
 
@@ -31,4 +32,5 @@ def extract_from_html(file_path):
         html = BeautifulSoup(file, 'html.parser')
         text = html.get_text(separator='\n')
         text = text.strip()
+        text = re.split(r'\/\/]]>\s*', text)[1]
     return text
