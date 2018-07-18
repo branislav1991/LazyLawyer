@@ -2,6 +2,7 @@
     "db_path": "curia.db",
     "word2vec_path": "word2vec.bin",
     "fasttext_path": "fasttext.bin",
+    "doc2vec_path": "doc2vec.bin",
     "lsi_path": "lsi.bin",
     "googlenews_word2vec_path": "GoogleNews-vectors-negative300.bin",
     "metadata_path": "metadata.bin",

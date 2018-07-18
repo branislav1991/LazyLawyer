@@ -26,6 +26,24 @@ def save_doc_embeddings_word2vec(file_name, model):
     with open(os.path.join('saved_embeddings', file_name), 'wb') as f:
         pickle.dump(embs, f)
 
+def save_doc_embeddings_doc2vec(file_name, model):
+    """Saves document embeddings in a file
+    using the provided doc2vec model.
+    """
+    docs = table_docs.get_docs_with_names(['Judgment'])
+    content_gen = ContentGenerator(docs)
+    contents = [list(chain.from_iterable(content)) for content in content_gen]
+
+    helpers.create_folder_if_not_exists('saved_embeddings')
+    embs = []
+
+    for doc, content in zip(docs, contents):
+        emb = model.infer_vector(content)
+        embs.append({'doc_id': doc['id'], 'emb': emb})
+
+    with open(os.path.join('saved_embeddings', file_name), 'wb') as f:
+        pickle.dump(embs, f)
+
 def save_doc_embeddings_lsi(file_name, model, dictionary, tfidf):
     """Saves document embeddings in a file
     using the provided lsi model.
@@ -66,6 +84,15 @@ def save_fasttext_curia(model_path, pretrained):
     print('Saving document embeddings...')
     save_doc_embeddings_word2vec('fasttext.pickle', model)
 
+def save_doc2vec_curia(model_path):
+    # load pretrained model
+    print('Loading pretrained binary file...')
+    model_path = os.path.join('trained_models', model_path)
+    model = gensim.models.Doc2Vec.load(model_path)
+
+    print('Saving document embeddings...')
+    save_doc_embeddings_doc2vec('doc2vec.pickle', model)
+
 def save_lsi_curia(model_path):
     # load pretrained model
     print('Loading pretrained binary file...')
@@ -91,5 +118,7 @@ if __name__ == '__main__':
         save_fasttext_curia(args.model_path, pretrained=False)
     elif args.model == 'fasttext_pretrained':
         save_fasttext_curia(args.model_path, pretrained=True)
+    elif args.model == 'doc2vec':
+        save_doc2vec_curia(args.model_path)
     elif args.model == 'lsi':
         save_lsi_curia(args.model_path)

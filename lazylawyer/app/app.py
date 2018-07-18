@@ -50,6 +50,8 @@ def search():
             raise ValueError('tfidf not set during loading')
 
         query_emb = get_embedding_doc_lsi(list(chain.from_iterable(query_content)), model, dictionary, tfidf)
+    elif isinstance(model, gensim.models.Doc2Vec):
+        query_emb = model.infer_vector(list(chain.from_iterable(query_content)))
     else:
         query_emb = get_embedding_doc_word2vec(query_content, model, stopword_removal=True)
 
@@ -64,7 +66,7 @@ def search():
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Launch flask web app.')
-    parser.add_argument('model', choices=['word2vec', 'fasttext', 'fasttext_pretrained', 'lsi'], help='model for doc embeddings')
+    parser.add_argument('model', choices=['word2vec', 'fasttext', 'fasttext_pretrained', 'doc2vec', 'lsi'], help='model for doc embeddings')
     parser.add_argument('model_path', help='model path')
     parser.add_argument('--num_words', type=int, default=1000000, help='vocabulary size')
 
@@ -82,6 +84,10 @@ if __name__ == '__main__':
         print('Loading pretrained model...')
         model_path = os.path.join('trained_models', args.model_path)
         model = gensim.models.FastText.load_fasttext_format(model_path)
+    elif args.model == 'doc2vec':
+        print('Loading pretrained model...')
+        model_path = os.path.join('trained_models', args.model_path)
+        model = gensim.models.Doc2Vec.load(model_path)
     elif args.model == 'lsi':
         print('Loading pretrained model...')
         model_path = os.path.join('trained_models', args.model_path)

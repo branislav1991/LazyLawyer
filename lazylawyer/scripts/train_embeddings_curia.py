@@ -10,6 +10,7 @@ from lazylawyer import helpers
 from lazylawyer.nlp.curia_preprocessor import tokenize_and_process_metadata
 from lazylawyer.scripts.save_doc_embeddings import save_doc_embeddings_word2vec
 from lazylawyer.scripts.save_doc_embeddings import save_doc_embeddings_lsi
+from lazylawyer.scripts.save_doc_embeddings import save_doc_embeddings_doc2vec
 import gensim
 from itertools import chain
 import os
@@ -52,6 +53,26 @@ def train_word2vec_curia(min_count, epoch_num, embedding_dim, learning_rate):
 
     print('Saving document embeddings...')
     save_doc_embeddings_word2vec('word2vec.pickle', model)
+
+def train_doc2vec_curia(min_count, epoch_num, embedding_dim, learning_rate):
+    print("Initializing database and loading documents...")
+    docs = table_docs.get_docs_with_names(['Judgment'])
+
+    helpers.create_folder_if_not_exists('trained_models')
+    model_path = os.path.join('trained_models', helpers.setup_json['doc2vec_path'])
+
+    content_gen = ContentGenerator(docs)
+    contents = [list(chain.from_iterable(content)) for content in content_gen]
+    contents = [gensim.models.doc2vec.TaggedDocument(content, [i]) for i, content in enumerate(contents)]
+
+    print('Initializing and training model...')
+    model = gensim.models.Doc2Vec(documents=contents, iter=epoch_num, size=embedding_dim, window=3, dm=1, min_count=min_count, negative=5, workers=4, alpha=learning_rate)
+
+    # save final version
+    model.save(model_path)
+
+    print('Saving document embeddings...')
+    save_doc_embeddings_doc2vec('doc2vec.pickle', model)
 
 def train_lsi_curia(embedding_dim):
     print("Initializing database and loading documents...")
@@ -99,7 +120,7 @@ def train_metadata_vocabulary_curia():
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Train word2vec model on CURIA documents')
-    parser.add_argument('--model', choices=['word2vec', 'fasttext', 'lsi'], default='word2vec', help='which model should be trained')
+    parser.add_argument('--model', choices=['word2vec', 'fasttext', 'doc2vec', 'lsi'], default='word2vec', help='which model should be trained')
     parser.add_argument('--min_count', type=int, default=3, help='minimal word frequency')
     parser.add_argument('--num_epochs', type=int, default=10, help='number of epochs')
     parser.add_argument('--embedding_dim', type=int, default=300, help='embedding dimensions')
@@ -110,6 +131,8 @@ if __name__ == '__main__':
         train_word2vec_curia(args.min_count, args.num_epochs, args.embedding_dim, args.learning_rate)
     elif args.model == 'fasttext':
         train_fasttext_curia(args.min_count, args.num_epochs, args.embedding_dim, args.learning_rate)
+    elif args.model == 'doc2vec':
+        train_doc2vec_curia(args.min_count, args.num_epochs, args.embedding_dim, args.learning_rate)
     elif args.model == 'lsi':
         train_lsi_curia(args.embedding_dim)
     else:
